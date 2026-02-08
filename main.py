@@ -13,39 +13,395 @@ st.set_page_config(
     page_icon="🧬"
 )
 
+# --- PALETA DE COLORES ---
+# Primary: #0F172A (dark navy)
+# Accent:  #06B6D4 (cyan/teal)
+# Surface: #F8FAFC (off-white)
+# Card:    #FFFFFF
+# Muted:   #94A3B8 (slate)
+# Success: #10B981
+# Danger:  #EF4444
+
 # --- ESTILOS PERSONALIZADOS ---
 st.markdown("""
-    <style>
-    .main { background-color: #f5f7f9; }
-    .stMetric { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .chat-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 20px;
-        border-radius: 15px;
+<style>
+    /* ── Global ── */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    html, body, .main, [data-testid="stAppViewContainer"] {
+        background-color: #F1F5F9 !important;
+        font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Sidebar ── */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%) !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #E2E8F0 !important;
+    }
+    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3, [data-testid="stSidebar"] .stMarkdown h1,
+    [data-testid="stSidebar"] .stMarkdown h2, [data-testid="stSidebar"] .stMarkdown h3 {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+    [data-testid="stSidebar"] .stSelectbox label,
+    [data-testid="stSidebar"] .stMultiSelect label,
+    [data-testid="stSidebar"] .stFileUploader label,
+    [data-testid="stSidebar"] .stCheckbox label {
+        color: #CBD5E1 !important;
+        font-weight: 500 !important;
+    }
+    [data-testid="stSidebar"] .stFileUploader > div {
+        border: 2px dashed #334155 !important;
+        border-radius: 12px !important;
+        background: rgba(255,255,255,0.03) !important;
+    }
+    [data-testid="stSidebar"] .stFileUploader > div:hover {
+        border-color: #06B6D4 !important;
+        background: rgba(6,182,212,0.05) !important;
+    }
+    [data-testid="stSidebar"] hr {
+        border-color: #334155 !important;
+    }
+
+    /* ── Tabs ── */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background: #FFFFFF;
+        border-radius: 16px;
+        padding: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 12px !important;
+        padding: 10px 20px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        color: #64748B !important;
+        background: transparent !important;
+        border: none !important;
+        transition: all 0.2s ease;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+    }
+    .stTabs [aria-selected="true"] {
+        background: #0F172A !important;
+        color: #FFFFFF !important;
+    }
+    .stTabs [data-baseweb="tab-highlight"] {
+        display: none !important;
+    }
+    .stTabs [data-baseweb="tab-border"] {
+        display: none !important;
+    }
+
+    /* ── Metric Cards ── */
+    [data-testid="stMetric"] {
+        background: #FFFFFF;
+        padding: 20px 24px;
+        border-radius: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+        border: 1px solid #E2E8F0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    [data-testid="stMetric"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    [data-testid="stMetric"] label {
+        color: #64748B !important;
+        font-weight: 600 !important;
+        font-size: 13px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    [data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #0F172A !important;
+        font-weight: 800 !important;
+        font-size: 28px !important;
+    }
+
+    /* ── Buttons ── */
+    .stButton > button {
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        border: 1px solid #E2E8F0 !important;
+        background: #FFFFFF !important;
+        color: #334155 !important;
+        padding: 8px 16px !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
+    }
+    .stButton > button:hover {
+        border-color: #06B6D4 !important;
+        color: #06B6D4 !important;
+        background: #F0FDFA !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 4px 8px rgba(6,182,212,0.12) !important;
+    }
+
+    /* ── Expanders ── */
+    .streamlit-expanderHeader {
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        color: #0F172A !important;
+        background: #FFFFFF !important;
+        border-radius: 12px !important;
+        border: 1px solid #E2E8F0 !important;
+    }
+
+    /* ── DataFrame ── */
+    [data-testid="stDataFrame"] {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #E2E8F0;
+    }
+
+    /* ── Chat ── */
+    [data-testid="stChatMessage"] {
+        background: #FFFFFF !important;
+        border-radius: 16px !important;
+        padding: 16px 20px !important;
+        margin-bottom: 12px !important;
+        border: 1px solid #E2E8F0 !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+    }
+
+    [data-testid="stChatInput"] > div {
+        border-radius: 16px !important;
+        border: 2px solid #E2E8F0 !important;
+        background: #FFFFFF !important;
+        transition: border-color 0.2s ease;
+    }
+    [data-testid="stChatInput"] > div:focus-within {
+        border-color: #06B6D4 !important;
+        box-shadow: 0 0 0 3px rgba(6,182,212,0.1) !important;
+    }
+
+    /* ── Custom Components ── */
+    .hero-header {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+        padding: 40px 48px;
+        border-radius: 24px;
+        color: white;
+        margin-bottom: 32px;
+        position: relative;
+        overflow: hidden;
+    }
+    .hero-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-header::after {
+        content: '';
+        position: absolute;
+        bottom: -40%;
+        left: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .hero-header h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin: 0 0 8px 0;
+        position: relative;
+        z-index: 1;
+        letter-spacing: -0.5px;
+    }
+    .hero-header p {
+        color: #94A3B8;
+        font-size: 16px;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+    .hero-badge {
+        display: inline-block;
+        background: rgba(6,182,212,0.15);
+        color: #06B6D4;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .chat-header-card {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        padding: 32px;
+        border-radius: 20px;
         color: white;
         text-align: center;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+    }
+    .chat-header-card::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -15%;
+        width: 200px;
+        height: 200px;
+        background: radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .chat-header-card h2 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        position: relative;
+        z-index: 1;
+    }
+    .chat-header-card p {
+        color: #94A3B8;
+        font-size: 14px;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .section-card {
+        background: #FFFFFF;
+        padding: 28px;
+        border-radius: 20px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
         margin-bottom: 20px;
     }
-    .suggestion-button {
-        background-color: #f0f2f6;
-        padding: 10px;
-        border-radius: 8px;
-        margin: 5px;
-        cursor: pointer;
-        transition: all 0.3s;
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 4px 0;
     }
-    .suggestion-button:hover {
-        background-color: #e0e2e6;
-        transform: translateY(-2px);
+    .section-subtitle {
+        font-size: 13px;
+        color: #94A3B8;
+        margin: 0 0 20px 0;
     }
-    </style>
-    """, unsafe_allow_html=True)
 
-st.title("🛰️ Sistema de Soporte a la Decisión (DSS): COVID-19")
-st.markdown("---")
+    .welcome-container {
+        text-align: center;
+        padding: 80px 40px;
+    }
+    .welcome-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #06B6D4 0%, #6366F1 100%);
+        border-radius: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin-bottom: 28px;
+        box-shadow: 0 8px 24px rgba(6,182,212,0.25);
+    }
+    .welcome-container h2 {
+        font-size: 28px;
+        font-weight: 800;
+        color: #0F172A;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+    }
+    .welcome-container .subtitle {
+        font-size: 16px;
+        color: #64748B;
+        max-width: 500px;
+        margin: 0 auto 40px auto;
+        line-height: 1.6;
+    }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+    .feature-item {
+        background: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: left;
+        transition: all 0.2s ease;
+    }
+    .feature-item:hover {
+        border-color: #06B6D4;
+        box-shadow: 0 4px 12px rgba(6,182,212,0.08);
+    }
+    .feature-item .icon {
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+    .feature-item .label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0F172A;
+        margin: 0 0 4px 0;
+    }
+    .feature-item .desc {
+        font-size: 12px;
+        color: #94A3B8;
+        margin: 0;
+    }
+
+    .footer {
+        text-align: center;
+        padding: 24px 0 8px 0;
+        color: #94A3B8;
+        font-size: 13px;
+    }
+    .footer a {
+        color: #06B6D4;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* Hide default Streamlit header gap */
+    .block-container {
+        padding-top: 2rem !important;
+    }
+
+    /* Selectbox / Multiselect inside main area */
+    .stSelectbox > div > div, .stMultiSelect > div > div {
+        border-radius: 12px !important;
+    }
+
+    /* Alerts */
+    .stAlert > div {
+        border-radius: 12px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- HERO HEADER ---
+st.markdown("""
+<div class="hero-header">
+    <div class="hero-badge">COVID-19 ANALYTICS</div>
+    <h1>Sistema de Soporte a la Decision (DSS)</h1>
+    <p>Plataforma integral de analisis epidemiologico con inteligencia artificial</p>
+</div>
+""", unsafe_allow_html=True)
 
 # --- SIDEBAR: MÓDULO ETL (INGESTA Y LIMPIEZA) ---
-st.sidebar.header("⚙️ Módulo 1: ETL e Ingesta")
+st.sidebar.markdown("### Modulo ETL e Ingesta")
+st.sidebar.markdown("---")
 uploaded_file = st.sidebar.file_uploader("Cargar Base de Datos Final (CSV)", type="csv")
 
 if uploaded_file is not None:
@@ -53,24 +409,20 @@ if uploaded_file is not None:
     df_raw = pd.read_csv(uploaded_file)
     
     # 1. Limpieza Interactiva (Requisito 2.1)
-    st.sidebar.subheader("Limpieza de Datos")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("#### Limpieza de Datos")
     
     if st.sidebar.checkbox("Eliminar Duplicados"):
         df_raw = df_raw.drop_duplicates()
         st.sidebar.success("Duplicados eliminados.")
 
-    # --- CAMBIO EN EL SIDEBAR ---
-    if st.sidebar.checkbox("Tratar Nulos en ISO3 (Códigos País)"):
-        # Contamos nulos solo en lo que el usuario está viendo actualmente
+    if st.sidebar.checkbox("Tratar Nulos en ISO3 (Codigos Pais)"):
         nulos_iso = df_raw['ISO3'].isnull().sum() 
         df_raw['ISO3'] = df_raw['ISO3'].fillna('UNK')
-        
-        # Si quieres que coincida con la tabla de nulos de la pestaña, 
-        # el mensaje debería decir que se limpió la base completa:
-        st.sidebar.info(f"Se imputaron {nulos_iso} códigos en el dataset global.")
+        st.sidebar.info(f"Se imputaron {nulos_iso} codigos en el dataset global.")
 
     metodo_nulos = st.sidebar.selectbox(
-        "Método de Imputación (Variables Numéricas):",
+        "Metodo de Imputacion (Variables Numericas):",
         ["Ninguno", "Llenar con Media", "Llenar con Cero"]
     )
     
@@ -83,7 +435,8 @@ if uploaded_file is not None:
         df_clean[num_cols] = df_clean[num_cols].fillna(0)
 
     # 2. Filtros de Navegación
-    st.sidebar.subheader("Navegación de Análisis")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("#### Navegacion de Analisis")
     indicador = st.sidebar.selectbox("Seleccione Indicador:", df_clean['indicator'].unique())
     continentes = st.sidebar.multiselect("Filtrar Continentes:", df_clean['continent'].unique(), default=df_clean['continent'].unique())
     
@@ -92,55 +445,79 @@ if uploaded_file is not None:
 
     # --- ESTRUCTURA DE PESTAÑAS (Requisito 2.2) ---
     tab_desc, tab_cuant, tab_graf, tab_ia = st.tabs([
-        "📖 Análisis Descriptivo", 
-        "🔢 Análisis Cuantitativo", 
-        "📊 Análisis Gráfico", 
-        "🤖 AI Analyst (Groq)"
+        "  Analisis Descriptivo  ", 
+        "  Analisis Cuantitativo  ", 
+        "  Analisis Grafico  ", 
+        "  AI Analyst (Groq)  "
     ])
 
     # --- TAB 1: ANÁLISIS DESCRIPTIVO (Cualitativo) ---
     with tab_desc:
-        st.subheader("📚 Glosario y Resumen de Datos")
+        st.markdown("""
+        <div class="section-card">
+            <p class="section-title">Glosario y Resumen de Datos</p>
+            <p class="section-subtitle">Descripcion general del dataset, calidad y estructura de variables</p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        with st.expander("🔍 Interpretación de Variables (Feature Engineering)"):
+        with st.expander("Interpretacion de Variables (Feature Engineering)", expanded=False):
             st.markdown("""
-            * **casos_100k:** Tasa de incidencia. Casos por cada 100,000 habitantes.
-            * **camas_por_100k:** Capacidad hospitalaria instalada por cada 100,000 habitantes.
-            * **letalidad_pct:** Porcentaje de fallecimientos respecto a la población semanal.
-            * **avg_temp:** Temperatura promedio mensual del país.
+            | Variable | Descripcion |
+            |---|---|
+            | `casos_100k` | Tasa de incidencia. Casos por cada 100,000 habitantes. |
+            | `camas_por_100k` | Capacidad hospitalaria instalada por cada 100,000 habitantes. |
+            | `letalidad_pct` | Porcentaje de fallecimientos respecto a la poblacion semanal. |
+            | `avg_temp` | Temperatura promedio mensual del pais. |
             """)
         
         c1, c2 = st.columns(2)
         with c1:
-            st.write("**Calidad del Dataset (Nulos):**")
-            st.write(df_final.isnull().sum())
+            st.markdown("**Calidad del Dataset (Nulos)**")
+            st.dataframe(df_final.isnull().sum().rename("Nulos"), use_container_width=True)
         with c2:
-            st.write("**Estructura de Datos:**")
-            st.write(df_final.dtypes.value_counts())
+            st.markdown("**Estructura de Datos**")
+            st.dataframe(df_final.dtypes.value_counts().rename("Cantidad"), use_container_width=True)
         
-        st.write("**Vista Previa del Dataset Limpio:**")
+        st.markdown("**Vista Previa del Dataset Limpio**")
         st.dataframe(df_final.head(15), use_container_width=True)
 
     # --- TAB 2: ANÁLISIS CUANTITATIVO ---
     with tab_cuant:
-        st.subheader("🧬 Correlaciones Estadísticas")
+        st.markdown("""
+        <div class="section-card">
+            <p class="section-title">Correlaciones Estadisticas</p>
+            <p class="section-subtitle">Metricas de resumen y matriz de correlacion de Pearson</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Métricas de Resumen
         m1, m2, m3 = st.columns(3)
         m1.metric("Letalidad Media (%)", f"{df_final['letalidad_pct'].mean():.4f}%")
         m2.metric("Promedio Incidencia x 100k", f"{df_final['casos_100k'].mean():.2f}")
-        m3.metric("Temp. Promedio Selección", f"{df_final['avg_temp'].mean():.1f} °C")
+        m3.metric("Temp. Promedio Seleccion", f"{df_final['avg_temp'].mean():.1f} °C")
         
-        st.write("**Matriz de Correlación de Pearson:**")
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("**Matriz de Correlacion de Pearson**")
         df_corr = df_final[num_cols].corr()
         fig_corr, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(df_corr, annot=True, cmap="RdBu_r", center=0, fmt=".2f", ax=ax)
+        sns.heatmap(
+            df_corr, annot=True, cmap="coolwarm", center=0, fmt=".2f", ax=ax,
+            linewidths=0.5, linecolor='#F1F5F9',
+            cbar_kws={"shrink": 0.8}
+        )
+        ax.set_facecolor('#FFFFFF')
+        fig_corr.patch.set_facecolor('#F1F5F9')
+        plt.tight_layout()
         st.pyplot(fig_corr)
-        
 
     # --- TAB 3: ANÁLISIS GRÁFICO (EDA Dinámico) ---
     with tab_graf:
-        st.subheader("📊 Visualizaciones Interactivas")
+        st.markdown("""
+        <div class="section-card">
+            <p class="section-title">Visualizaciones Interactivas</p>
+            <p class="section-subtitle">Exploracion visual de distribuciones, relaciones y geografia</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Fix para el error de 'size' en Plotly (no permite ceros ni nulos)
         df_viz = df_final.copy()
@@ -149,26 +526,65 @@ if uploaded_file is not None:
         col_a, col_b = st.columns(2)
         
         with col_a:
-            st.write("**Distribución de la Tasa de Letalidad:**")
-            fig_hist = px.histogram(df_viz, x="letalidad_pct", marginal="box", color_discrete_sequence=['#ff4b4b'])
+            st.markdown("**Distribucion de la Tasa de Letalidad**")
+            fig_hist = px.histogram(
+                df_viz, x="letalidad_pct", marginal="box", 
+                color_discrete_sequence=['#06B6D4'],
+                template="plotly_white"
+            )
+            fig_hist.update_layout(
+                plot_bgcolor='#FFFFFF',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter", size=12),
+                margin=dict(t=30, b=30)
+            )
             st.plotly_chart(fig_hist, use_container_width=True)
             
-            
         with col_b:
-            st.write("**Relación Temperatura vs Incidencia:**")
+            st.markdown("**Relacion Temperatura vs Incidencia**")
             fig_scat = px.scatter(
                 df_viz, x="avg_temp", y="casos_100k", 
                 size="size_ref", color="continent", 
                 hover_name="country",
                 hover_data={"size_ref": False, "camas_por_100k": True},
-                trendline="ols"
+                trendline="ols",
+                color_discrete_sequence=px.colors.qualitative.Set2,
+                template="plotly_white"
+            )
+            fig_scat.update_layout(
+                plot_bgcolor='#FFFFFF',
+                paper_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter", size=12),
+                margin=dict(t=30, b=30),
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=-0.25,
+                    xanchor="center",
+                    x=0.5
+                )
             )
             st.plotly_chart(fig_scat, use_container_width=True)
 
-        st.write("**Impacto Geográfico Global:**")
+        st.markdown("**Impacto Geografico Global**")
         fig_map = px.choropleth(
             df_viz, locations="ISO3", color="casos_100k", 
-            hover_name="country", color_continuous_scale="Viridis"
+            hover_name="country", color_continuous_scale="Tealgrn",
+            template="plotly_white"
+        )
+        fig_map.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            geo=dict(
+                bgcolor='rgba(0,0,0,0)',
+                showframe=False,
+                showcoastlines=True,
+                coastlinecolor='#CBD5E1',
+                landcolor='#F1F5F9',
+                lakecolor='#E2E8F0'
+            ),
+            font=dict(family="Inter", size=12),
+            margin=dict(t=20, b=20, l=0, r=0),
+            height=500
         )
         st.plotly_chart(fig_map, use_container_width=True)
 
@@ -176,10 +592,10 @@ if uploaded_file is not None:
     with tab_ia:
         # Header atractivo
         st.markdown("""
-            <div class="chat-header">
-                <h2>🤖 Chat Inteligente con Analista IA</h2>
-                <p>Conversa con la IA sobre tu dataset de COVID-19 usando Groq</p>
-            </div>
+        <div class="chat-header-card">
+            <h2>Chat Inteligente con Analista IA</h2>
+            <p>Conversa con la IA sobre tu dataset de COVID-19 usando Groq</p>
+        </div>
         """, unsafe_allow_html=True)
         
         # Inicializar el historial de chat en session_state
@@ -190,38 +606,38 @@ if uploaded_file is not None:
             st.session_state.groq_api_key = ""
         
         # Sección de configuración
-        with st.expander("⚙️ Configuración de API", expanded=not st.session_state.groq_api_key):
+        with st.expander("Configuracion de API", expanded=not st.session_state.groq_api_key):
             api_key_input = st.text_input(
-                "🔑 API Key de Groq:", 
+                "API Key de Groq:", 
                 type="password",
                 value=st.session_state.groq_api_key,
-                placeholder="Ingresa tu API key aquí...",
-                help="Obtén tu API key gratis en console.groq.com"
+                placeholder="Ingresa tu API key aqui...",
+                help="Obten tu API key gratis en console.groq.com"
             )
             
             if api_key_input:
                 st.session_state.groq_api_key = api_key_input
-                st.success("✅ API Key configurada correctamente")
+                st.success("API Key configurada correctamente")
             
             st.markdown("""
-                **¿Cómo obtener tu API Key?**
+                **Como obtener tu API Key:**
                 1. Visita [console.groq.com](https://console.groq.com)
                 2. Crea una cuenta gratuita
-                3. Ve a "API Keys" en el menú
+                3. Ve a "API Keys" en el menu
                 4. Genera una nueva key
-                5. Cópiala y pégala arriba 🔝
+                5. Copiala y pegala arriba
             """)
         
         # Controles del chat
         col_info, col_clear = st.columns([4, 1])
         with col_info:
             if st.session_state.groq_api_key:
-                st.info("💬 La IA tiene contexto completo de tu dataset. ¡Hazle preguntas!")
+                st.info("La IA tiene contexto completo de tu dataset. Hazle preguntas!")
             else:
-                st.warning("⚠️ Configura tu API Key para comenzar a chatear")
+                st.warning("Configura tu API Key para comenzar a chatear")
         
         with col_clear:
-            if st.button("🗑️ Limpiar Chat", use_container_width=True):
+            if st.button("Limpiar Chat", use_container_width=True):
                 st.session_state.messages = []
                 st.rerun()
         
@@ -240,22 +656,22 @@ if uploaded_file is not None:
             if len(st.session_state.messages) == 0:
                 with st.chat_message("assistant", avatar="🤖"):
                     st.markdown("""
-                        ¡Hola! 👋 Soy tu asistente de análisis de datos especializado en COVID-19.
+                        Hola! Soy tu asistente de analisis de datos especializado en COVID-19.
                         
                         Puedo ayudarte a:
-                        - 📊 Interpretar estadísticas y correlaciones
-                        - 🌍 Analizar tendencias por continente o país
-                        - 🏥 Evaluar el impacto de la infraestructura hospitalaria
-                        - 🌡️ Estudiar la relación entre temperatura y casos
-                        - 💡 Generar insights y recomendaciones
+                        - **Interpretar** estadisticas y correlaciones
+                        - **Analizar** tendencias por continente o pais
+                        - **Evaluar** el impacto de la infraestructura hospitalaria
+                        - **Estudiar** la relacion entre temperatura y casos
+                        - **Generar** insights y recomendaciones
                         
-                        **¿Qué te gustaría saber sobre tus datos?**
+                        **Que te gustaria saber sobre tus datos?**
                     """)
         
         # Input del usuario
-        if prompt := st.chat_input("💭 Escribe tu pregunta aquí...", key="chat_input"):
+        if prompt := st.chat_input("Escribe tu pregunta aqui...", key="chat_input"):
             if not st.session_state.groq_api_key:
-                st.error("⚠️ Por favor, configura tu API Key de Groq primero en la sección de Configuración.")
+                st.error("Por favor, configura tu API Key de Groq primero en la seccion de Configuracion.")
             else:
                 # Agregar mensaje del usuario
                 st.session_state.messages.append({"role": "user", "content": prompt})
@@ -361,30 +777,30 @@ INSTRUCCIONES DE RESPUESTA:
                         })
                         
                     except Exception as e:
-                        error_msg = f"❌ **Error al conectar con Groq:**\n\n`{str(e)}`\n\nVerifica que tu API Key sea válida y tengas conexión a internet."
+                        error_msg = f"**Error al conectar con Groq:**\n\n`{str(e)}`\n\nVerifica que tu API Key sea valida y tengas conexion a internet."
                         message_placeholder.error(error_msg)
         
         # Sección de preguntas sugeridas
         st.markdown("---")
-        st.markdown("### 💡 Preguntas Sugeridas")
-        st.caption("Haz clic en cualquier pregunta para enviarla automáticamente")
+        st.markdown("#### Preguntas Sugeridas")
+        st.caption("Haz clic en cualquier pregunta para enviarla automaticamente")
         
         col1, col2, col3 = st.columns(3)
         
         suggestions = [
-            ("📊", "¿Cuál es la correlación entre temperatura e incidencia de casos?"),
-            ("🏥", "¿Cómo afecta la infraestructura hospitalaria a la tasa de letalidad?"),
-            ("🌍", "¿Qué continente presenta el mayor impacto según los datos?"),
-            ("📈", "Identifica los 5 países con mayor tasa de letalidad"),
-            ("🔍", "¿Hay algún patrón interesante en los datos que deba considerar?"),
-            ("💊", "Dame 3 recomendaciones basadas en el análisis del dataset")
+            ("📊", "Cual es la correlacion entre temperatura e incidencia de casos?"),
+            ("🏥", "Como afecta la infraestructura hospitalaria a la tasa de letalidad?"),
+            ("🌍", "Que continente presenta el mayor impacto segun los datos?"),
+            ("📈", "Identifica los 5 paises con mayor tasa de letalidad"),
+            ("🔍", "Hay algun patron interesante en los datos que deba considerar?"),
+            ("💊", "Dame 3 recomendaciones basadas en el analisis del dataset")
         ]
         
         cols = [col1, col2, col3, col1, col2, col3]
         
         for idx, (emoji, question) in enumerate(suggestions):
             with cols[idx]:
-                if st.button(f"{emoji} {question[:30]}...", key=f"sugg_{idx}", use_container_width=True):
+                if st.button(f"{emoji} {question[:40]}...", key=f"sugg_{idx}", use_container_width=True):
                     # Simular envío de la pregunta
                     if st.session_state.groq_api_key:
                         st.session_state.messages.append({"role": "user", "content": question})
@@ -396,27 +812,44 @@ INSTRUCCIONES DE RESPUESTA:
         if len(st.session_state.messages) > 0:
             st.markdown("---")
             user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
-            st.caption(f"📊 Conversación activa: {user_msgs} preguntas realizadas")
+            st.caption(f"Conversacion activa: {user_msgs} preguntas realizadas")
 
 else:
     # Pantalla de bienvenida mejorada
     st.markdown("""
-        <div style='text-align: center; padding: 50px;'>
-            <h2>👋 Bienvenido al Sistema de Soporte a la Decisión</h2>
-            <p style='font-size: 18px; color: #666;'>
-                Para comenzar, carga tu archivo CSV con datos de COVID-19 usando el panel lateral
-            </p>
-            <p style='margin-top: 30px;'>
-                <span style='font-size: 48px;'>📊</span><br>
-                <strong>Funcionalidades principales:</strong><br>
-                ✅ Limpieza y análisis de datos<br>
-                ✅ Visualizaciones interactivas<br>
-                ✅ Chat con IA especializada<br>
-                ✅ Insights automáticos
-            </p>
+    <div class="welcome-container">
+        <div class="welcome-icon">📊</div>
+        <h2>Bienvenido al Sistema de Soporte a la Decision</h2>
+        <p class="subtitle">Para comenzar, carga tu archivo CSV con datos de COVID-19 usando el panel lateral izquierdo.</p>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <div class="icon">🧹</div>
+                <p class="label">Limpieza de Datos</p>
+                <p class="desc">ETL interactivo con imputacion y filtros</p>
+            </div>
+            <div class="feature-item">
+                <div class="icon">📈</div>
+                <p class="label">Visualizaciones</p>
+                <p class="desc">Graficos interactivos y mapas globales</p>
+            </div>
+            <div class="feature-item">
+                <div class="icon">🧬</div>
+                <p class="label">Correlaciones</p>
+                <p class="desc">Analisis estadistico de Pearson</p>
+            </div>
+            <div class="feature-item">
+                <div class="icon">🤖</div>
+                <p class="label">Chat con IA</p>
+                <p class="desc">Asistente inteligente con Groq AI</p>
+            </div>
         </div>
+    </div>
     """, unsafe_allow_html=True)
 
 # --- PIE DE PÁGINA ---
-st.markdown("---")
-st.caption("🚀 Proyecto Final: Sistema de Soporte a la Decisión | Powered by Groq AI & Streamlit")
+st.markdown("""
+<div class="footer">
+    <hr style="border-color: #E2E8F0; margin-bottom: 16px;">
+    Proyecto Final: Sistema de Soporte a la Decision &nbsp;·&nbsp; Powered by <a href="https://groq.com" target="_blank">Groq AI</a> & <a href="https://streamlit.io" target="_blank">Streamlit</a>
+</div>
+""", unsafe_allow_html=True)
