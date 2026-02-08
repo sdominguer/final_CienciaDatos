@@ -1,100 +1,148 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
-import numpy as np
-from groq import Groq # Debes instalar: pip install groq
+from groq import Groq
 
-# --- CONFIGURACIÓN Y ESTILO ---
-st.set_page_config(page_title="DSS - Pandemic Insight", layout="wide")
-st.title("🚀 Sistema de Soporte a la Decisión (DSS) - COVID-19")
+# Configuración de página
+st.set_page_config(page_title="Pandemic Decision Support System", layout="wide", page_icon="📈")
 
-# --- BARRA LATERAL: INGESTA Y ETL ---
-st.sidebar.header("1. Módulo ETL (Ingesta y Limpieza)")
-uploaded_file = st.sidebar.file_uploader("Cargar Dataset CSV", type="csv")
+st.title("🚀 Sistema de Soporte a la Decisión: Análisis COVID-19")
+st.markdown("---")
 
-if uploaded_file:
+# --- SIDEBAR: MÓDULO ETL Y LIMPIEZA ---
+st.sidebar.header("⚙️ Configuración del Sistema")
+uploaded_file = st.sidebar.file_uploader("Cargar Base de Datos (CSV)", type="csv")
+
+if uploaded_file is not None:
+    # Lectura inicial
     df_raw = pd.read_csv(uploaded_file)
     
-    # --- LIMPIEZA INTERACTIVA ---
-    st.sidebar.subheader("Limpieza de Datos")
-    if st.sidebar.checkbox("Eliminar Duplicados"):
+    # 1. Limpieza Interactiva (Requisito 2.1)
+    st.sidebar.subheader("Módulo de Limpieza")
+    
+    if st.sidebar.checkbox("Eliminar registros duplicados"):
+        antes = len(df_raw)
         df_raw = df_raw.drop_duplicates()
-        st.sidebar.success("Duplicados eliminados")
+        st.sidebar.success(f"Eliminados {antes - len(df_raw)} duplicados")
 
-    metodo_imputacion = st.sidebar.selectbox(
-        "Método de Imputación (Nulos):",
-        ["Ninguno", "Media", "Mediana", "Cero"]
+    metodo_nulos = st.sidebar.selectbox(
+        "¿Cómo quieres tratar los nulos restantes?",
+        ["Mantener nulos", "Llenar con Media", "Llenar con Cero"]
     )
     
-    # Aplicar imputación a variables numéricas
-    num_cols = df_raw.select_dtypes(include=[np.number]).columns
-    if metodo_imputacion == "Media":
-        df_raw[num_cols] = df_raw[num_cols].fillna(df_raw[num_cols].mean())
-    elif metodo_imputacion == "Mediana":
-        df_raw[num_cols] = df_raw[num_cols].fillna(df_raw[num_cols].median())
-    elif metodo_imputacion == "Cero":
-        df_raw[num_cols] = df_raw[num_cols].fillna(0)
+    # Aplicar limpieza según selección
+    df_clean = df_raw.copy()
+    num_cols = df_clean.select_dtypes(include=[np.number]).columns
+    
+    if metodo_nulos == "Llenar con Media":
+        df_clean[num_cols] = df_clean[num_cols].fillna(df_clean[num_cols].mean())
+        st.sidebar.info("Nulos imputados con la media")
+    elif metodo_nulos == "Llenar con Cero":
+        df_clean[num_cols] = df_clean[num_cols].fillna(0)
+        st.sidebar.info("Nulos imputados con cero")
 
-    # --- FEATURE ENGINEERING ---
-    # Requisito 2.1: Crear nueva columna calculada
-    if 'weekly_count' in df_raw.columns and 'population' in df_raw.columns:
-        df_raw['casos_por_100k'] = (df_raw['weekly_count'] / df_raw['population']) * 100000
+    # 2. Filtros de Navegación
+    st.sidebar.subheader("Filtros de Análisis")
+    indicador = st.sidebar.selectbox("Indicador:", df_clean['indicator'].unique())
+    continentes = st.sidebar.multiselect("Continentes:", df_clean['continent'].unique(), default=df_raw['continent'].unique())
+    paises = st.sidebar.multiselect("Países:", df_clean[df_clean['continent'].isin(continentes)]['country'].unique())
 
-    # --- FILTROS GLOBALES ---
-    st.sidebar.subheader("2. Filtros Globales")
-    selected_cont = st.sidebar.multiselect("Continente", df_raw['continent'].unique(), default=df_raw['continent'].unique())
-    slider_beds = st.sidebar.slider("Rango Camas Hospital", 0.0, float(df_raw['hospital_beds'].max()), (0.0, 10.0))
+    # Dataframe filtrado final
+    df_final = df_clean[(df_clean['indicator'] == indicador) & (df_clean['continent'].isin(continentes))]
+    if paises:
+        df_final = df_final[df_final['country'].isin(paises)]
 
-    df_filtered = df_raw[(df_raw['continent'].isin(selected_cont)) & 
-                         (df_raw['hospital_beds'].between(slider_beds[0], slider_beds[1]))]
+    # --- TABS: ORGANIZACIÓN DEL PROYECTO ---
+    tab_desc, tab_cuant, tab_graf, tab_ia = st.tabs([
+        "📖 Análisis Descriptivo", 
+        "🔢 Análisis Cuantitativo", 
+        "📊 Análisis Gráfico", 
+        "🤖 AI Insights (Groq)"
+    ])
 
-    # --- TABS: EDA DINÁMICO ---
-    tab_uni, tab_bi, tab_ia = st.tabs(["📊 Análisis Univariado", "🔗 Correlaciones (Bivariado)", "🤖 AI Analyst (Groq)"])
+    # TAB 1: DESCRIPTIVO (Resumen del dataset y nulos)
+    with tab_desc:
+        st.subheader("Resumen Cualitativo y Estadístico")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("**Estructura del Dataset:**")
+            st.write(f"Filas: {df_final.shape[0]} | Columnas: {df_final.shape[1]}")
+            st.write(df_final.dtypes.value_counts())
+        with col2:
+            st.write("**Conteo de Nulos actual:**")
+            st.write(df_final.isnull().sum())
+        
+        st.write("**Muestra de Datos Limpios:**")
+        st.dataframe(df_final.head(10))
 
-    with tab_uni:
-        st.subheader("Distribución de Variables")
-        col_var = st.selectbox("Selecciona Variable para ver Distribución:", num_cols)
-        # Requisito 2.2: Histograma/Boxplot
-        fig_dist = px.histogram(df_filtered, x=col_var, marginal="box", title=f"Distribución de {col_var}")
-        st.plotly_chart(fig_dist, use_container_width=True)
-
-    with tab_bi:
-        st.subheader("Matriz de Correlación Total")
-        corr = df_filtered[num_cols].corr()
-        fig_corr, ax = plt.subplots()
-        sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
+    # TAB 2: CUANTITATIVO (Métricas y Correlaciones)
+    with tab_cuant:
+        st.subheader("Análisis de Correlaciones y Métricas")
+        # Métricas clave
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Letalidad Promedio (%)", f"{df_final['letalidad_pct'].mean():.2f}%")
+        m2.metric("Incidencia x 100k", f"{df_final['casos_100k'].mean():.2f}")
+        m3.metric("Camas x 100k hab", f"{df_final['camas_por_100k'].mean():.2f}")
+        
+        # Heatmap
+        st.write("**Matriz de Correlación de Pearson:**")
+        fig_corr, ax = plt.subplots(figsize=(10, 6))
+        sns.heatmap(df_final[num_cols].corr(), annot=True, cmap="coolwarm", fmt=".2f", ax=ax)
         st.pyplot(fig_corr)
 
-    with tab_ia:
-        st.subheader("AI-Driven Insights (Groq)")
-        api_key = st.text_input("Introduce tu Groq API Key:", type="password")
+    # TAB 3: GRÁFICO (Interactividad Plotly)
+    with tab_graf:
+        st.subheader("Visualización Dinámica")
+        c1, c2 = st.columns(2)
         
-        if st.button("Generar Insights con IA"):
+        with c1:
+            st.write("**Distribución de la Letalidad:**")
+            fig_hist = px.histogram(df_final, x="letalidad_pct", nbins=30, color="continent", marginal="box")
+            st.plotly_chart(fig_hist, use_container_width=True)
+            
+        with c2:
+            st.write("**Relación Temperatura vs Casos:**")
+            fig_scat = px.scatter(df_final, x="avg_temp", y="casos_100k", size="camas_por_100k", 
+                                 color="continent", hover_name="country", trendline="ols")
+            st.plotly_chart(fig_scat, use_container_width=True)
+
+    # TAB 4: INTELIGENCIA ARTIFICIAL (Groq)
+    with tab_ia:
+        st.subheader("Consultor de IA Virtual")
+        st.info("Esta sección utiliza Llama-3 de Groq para interpretar los datos filtrados.")
+        
+        api_key = st.text_input("Ingresa tu Groq API Key:", type="password")
+        
+        if st.button("Generar Insights Estratégicos"):
             if not api_key:
-                st.error("Por favor, ingresa la API Key.")
+                st.warning("Por favor, ingresa una API Key válida de Groq.")
             else:
-                client = Groq(api_key=api_key)
-                # Resumen estadístico para el Prompt
-                stats_summary = df_filtered.describe().to_string()
-                
-                prompt = f"""
-                Actúa como un Consultor Senior de Datos. Analiza el siguiente resumen estadístico de datos de COVID-19:
-                {stats_summary}
-                
-                Responde a:
-                1. ¿Qué tendencias principales detectas?
-                2. ¿Qué riesgos sugieren los datos?
-                3. ¿Qué oportunidad de política pública existe?
-                """
-                
-                completion = client.chat.completions.create(
-                    model="llama3-8b-8192",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                st.markdown("### Análisis de la IA:")
-                st.write(completion.choices[0].message.content)
+                try:
+                    client = Groq(api_key=api_key)
+                    # Resumen para la IA
+                    stats = df_final.describe().to_string()
+                    
+                    prompt = f"""
+                    Actúa como un Consultor Senior de Datos. Basado en este resumen estadístico de COVID-19:
+                    {stats}
+                    
+                    Proporciona:
+                    1. Un análisis cualitativo de los datos.
+                    2. Tres hallazgos cuantitativos clave.
+                    3. Una recomendación estratégica para la toma de decisiones.
+                    """
+                    
+                    response = client.chat.completions.create(
+                        messages=[{"role": "user", "content": prompt}],
+                        model="llama3-8b-8192",
+                    )
+                    st.success("Análisis generado con éxito:")
+                    st.markdown(response.choices[0].message.content)
+                except Exception as e:
+                    st.error(f"Error al conectar con Groq: {e}")
 
 else:
-    st.info("Carga un CSV para activar el Sistema de Soporte a la Decisión.")
+    st.info("Esperando carga de archivo CSV para iniciar el sistema...")
