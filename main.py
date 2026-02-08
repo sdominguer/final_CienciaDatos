@@ -39,11 +39,15 @@ if uploaded_file is not None:
         df_raw = df_raw.drop_duplicates()
         st.sidebar.success("Duplicados eliminados.")
 
-    # Manejo de ISO3 Nulos (Los 330 que mencionaste)
+# --- CAMBIO EN EL SIDEBAR ---
     if st.sidebar.checkbox("Tratar Nulos en ISO3 (Códigos País)"):
-        nulos_iso = df_raw['ISO3'].isnull().sum()
-        df_raw['ISO3'] = df_raw['ISO3'].fillna('UNK') # UNK = Unknown
-        st.sidebar.info(f"Se imputaron {nulos_iso} códigos como 'UNK'.")
+        # Contamos nulos solo en lo que el usuario está viendo actualmente
+        nulos_iso = df_raw['ISO3'].isnull().sum() 
+        df_raw['ISO3'] = df_raw['ISO3'].fillna('UNK')
+        
+        # Si quieres que coincida con la tabla de nulos de la pestaña, 
+        # el mensaje debería decir que se limpió la base completa:
+        st.sidebar.info(f"Se imputaron {nulos_iso} códigos en el dataset global.")
 
     metodo_nulos = st.sidebar.selectbox(
         "Método de Imputación (Variables Numéricas):",
