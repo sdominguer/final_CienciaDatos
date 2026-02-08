@@ -711,15 +711,6 @@ if uploaded_file is not None:
             if api_key_input:
                 st.session_state.groq_api_key = api_key_input
                 st.success("API Key configurada correctamente")
-            
-            st.markdown("""
-                **Como obtener tu API Key:**
-                1. Visita [console.groq.com](https://console.groq.com)
-                2. Crea una cuenta gratuita
-                3. Ve a "API Keys" en el menu
-                4. Genera una nueva key
-                5. Copiala y pegala arriba
-            """)
         
         # Controles del chat
         col_info, col_clear = st.columns([4, 1])
@@ -846,7 +837,7 @@ INSTRUCCIONES DE RESPUESTA:
                         full_response = ""
                         
                         stream = client.chat.completions.create(
-                            model="llama3-8b-8192",
+                            model="llama-3.3-70b-versatile",
                             messages=messages_for_api,
                             temperature=0.7,
                             max_tokens=2048,
