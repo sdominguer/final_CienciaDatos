@@ -992,15 +992,6 @@ if uploaded_file is not None:
                 st.session_state.groq_api_key = api_key_input
                 st.success("✅ API Key configurada correctamente")
             
-            st.markdown("""
-                **Como obtener tu API Key:**
-                1. Visita [console.groq.com](https://console.groq.com)
-                2. Crea una cuenta gratuita
-                3. Ve a "API Keys" en el menu
-                4. Genera una nueva key
-                5. Copiala y pegala arriba
-            """)
-        
         # Controles del chat - CENTRADO
         col1, col2, col3 = st.columns([2, 1, 2])
         with col2:
@@ -1024,14 +1015,7 @@ if uploaded_file is not None:
                 with st.chat_message("assistant", avatar="🤖"):
                     st.markdown("""
                         Hola! Soy tu asistente de analisis de datos especializado en COVID-19.
-                        
-                        Puedo ayudarte a:
-                        - **Interpretar** estadisticas y correlaciones
-                        - **Analizar** tendencias por continente o pais
-                        - **Evaluar** el impacto de la infraestructura hospitalaria
-                        - **Estudiar** la relacion entre temperatura y casos
-                        - **Generar** insights y recomendaciones
-                        
+                                           
                         **Que te gustaria saber sobre tus datos?**
                     """)
         
