@@ -660,14 +660,6 @@ if uploaded_file is not None:
                     pass
             
             col_time1, col_time2 = st.columns([1, 3])
-            
-            with col_time1:
-                paises_time = st.multiselect(
-                    "Selecciona Paises:",
-                    options=sorted(df_viz['country'].unique()),
-                    default=sorted(df_viz['country'].unique())[:5] if len(df_viz['country'].unique()) >= 5 else sorted(df_viz['country'].unique()),
-                    key='time_countries'
-                )
                 
                 var_time = st.selectbox(
                     "Variable a graficar:",
