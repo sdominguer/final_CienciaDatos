@@ -3,107 +3,98 @@ import pandas as pd
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
+import numpy as np
+from groq import Groq # Debes instalar: pip install groq
 
-# Configuración de la página
-st.set_page_config(page_title="Pandemic Big Data Analysis", layout="wide", page_icon="📊")
+# --- CONFIGURACIÓN Y ESTILO ---
+st.set_page_config(page_title="DSS - Pandemic Insight", layout="wide")
+st.title("🚀 Sistema de Soporte a la Decisión (DSS) - COVID-19")
 
-st.title("🧬 Análisis de Correlación Multivariable")
-st.markdown("Explora cómo interactúan **todas** las variables de tu dataset (Clima, Población, Salud y COVID).")
+# --- BARRA LATERAL: INGESTA Y ETL ---
+st.sidebar.header("1. Módulo ETL (Ingesta y Limpieza)")
+uploaded_file = st.sidebar.file_uploader("Cargar Dataset CSV", type="csv")
 
-uploaded_file = st.file_uploader("Carga tu archivo CSV definitivo", type="csv")
-
-if uploaded_file is not None:
-    @st.cache_data
-    def load_and_clean(file):
-        df = pd.read_csv(file)
-        # Convertir fechas
-        if 'date' in df.columns:
-            df['date'] = pd.to_datetime(df['date'])
-            df['fecha_str'] = df['date'].dt.strftime('%Y-%m-%d')
-        
-        # Seleccionamos solo las columnas que realmente aportan al análisis numérico
-        # Eliminamos IDs o columnas de texto que no tienen sentido en una correlación
-        cols_drop = ['year', 'week', 'month'] # Evitamos variables temporales redundantes
-        df_clean = df.drop(columns=[c for c in cols_drop if c in df.columns])
-        
-        return df_clean
-
-    df = load_and_clean(uploaded_file)
-
-    # --- SIDEBAR ---
-    st.sidebar.header("Filtros Globales")
-    indicador = st.sidebar.selectbox("Indicador COVID:", df['indicator'].unique())
+if uploaded_file:
+    df_raw = pd.read_csv(uploaded_file)
     
-    conts = sorted(df['continent'].unique().tolist())
-    sel_conts = st.sidebar.multiselect("Continentes:", conts, default=conts)
+    # --- LIMPIEZA INTERACTIVA ---
+    st.sidebar.subheader("Limpieza de Datos")
+    if st.sidebar.checkbox("Eliminar Duplicados"):
+        df_raw = df_raw.drop_duplicates()
+        st.sidebar.success("Duplicados eliminados")
+
+    metodo_imputacion = st.sidebar.selectbox(
+        "Método de Imputación (Nulos):",
+        ["Ninguno", "Media", "Mediana", "Cero"]
+    )
     
-    paises_disp = sorted(df[df["continent"].isin(sel_conts)]["country"].unique().tolist())
-    sel_paises = st.sidebar.multiselect("Países en análisis:", paises_disp, default=paises_disp[:10])
+    # Aplicar imputación a variables numéricas
+    num_cols = df_raw.select_dtypes(include=[np.number]).columns
+    if metodo_imputacion == "Media":
+        df_raw[num_cols] = df_raw[num_cols].fillna(df_raw[num_cols].mean())
+    elif metodo_imputacion == "Mediana":
+        df_raw[num_cols] = df_raw[num_cols].fillna(df_raw[num_cols].median())
+    elif metodo_imputacion == "Cero":
+        df_raw[num_cols] = df_raw[num_cols].fillna(0)
 
-    # Filtrado dinámico
-    df_filtered = df[(df['indicator'] == indicador) & 
-                     (df['continent'].isin(sel_conts)) & 
-                     (df['country'].isin(sel_paises))]
+    # --- FEATURE ENGINEERING ---
+    # Requisito 2.1: Crear nueva columna calculada
+    if 'weekly_count' in df_raw.columns and 'population' in df_raw.columns:
+        df_raw['casos_por_100k'] = (df_raw['weekly_count'] / df_raw['population']) * 100000
 
-    # --- TABS ---
-    tab1, tab2, tab3 = st.tabs(["🌍 Mapa del Tiempo", "📉 Correlación Total", "📋 Datos Crudos"])
+    # --- FILTROS GLOBALES ---
+    st.sidebar.subheader("2. Filtros Globales")
+    selected_cont = st.sidebar.multiselect("Continente", df_raw['continent'].unique(), default=df_raw['continent'].unique())
+    slider_beds = st.sidebar.slider("Rango Camas Hospital", 0.0, float(df_raw['hospital_beds'].max()), (0.0, 10.0))
 
-    with tab1:
-        st.subheader(f"Propagación Histórica: {indicador}")
-        fig_map = px.choropleth(
-            df[df['indicator'] == indicador], # Mapa global para contexto
-            locations="ISO3",
-            color="weekly_count",
-            hover_name="country",
-            animation_frame="fecha_str",
-            color_continuous_scale="Viridis",
-            template="plotly_dark",
-            height=600
-        )
-        st.plotly_chart(fig_map, use_container_width=True)
+    df_filtered = df_raw[(df_raw['continent'].isin(selected_cont)) & 
+                         (df_raw['hospital_beds'].between(slider_beds[0], slider_beds[1]))]
 
-    with tab2:
-        st.subheader("🧪 Matriz de Correlación de Pearson (Todas las Variables)")
-        st.write("Esta matriz analiza la fuerza de la relación entre cada par de variables numéricas disponibles.")
-        
-        # 1. Filtramos solo columnas numéricas
-        df_numeric = df_filtered.select_dtypes(include=['float64', 'int64'])
-        
-        # 2. Calculamos la matriz
-        corr_matrix = df_numeric.corr()
+    # --- TABS: EDA DINÁMICO ---
+    tab_uni, tab_bi, tab_ia = st.tabs(["📊 Análisis Univariado", "🔗 Correlaciones (Bivariado)", "🤖 AI Analyst (Groq)"])
 
-        # 3. Visualización con Seaborn
-        fig_corr, ax = plt.subplots(figsize=(12, 8))
-        # Ajustamos el estilo para que se vea profesional
-        sns.heatmap(
-            corr_matrix, 
-            annot=True, 
-            fmt=".2f", 
-            cmap='coolwarm', 
-            center=0, 
-            linewidths=0.5,
-            ax=ax
-        )
-        plt.title(f"Correlación para {indicador} en Países Seleccionados")
+    with tab_uni:
+        st.subheader("Distribución de Variables")
+        col_var = st.selectbox("Selecciona Variable para ver Distribución:", num_cols)
+        # Requisito 2.2: Histograma/Boxplot
+        fig_dist = px.histogram(df_filtered, x=col_var, marginal="box", title=f"Distribución de {col_var}")
+        st.plotly_chart(fig_dist, use_container_width=True)
+
+    with tab_bi:
+        st.subheader("Matriz de Correlación Total")
+        corr = df_filtered[num_cols].corr()
+        fig_corr, ax = plt.subplots()
+        sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
         st.pyplot(fig_corr)
 
-        # INSIGHTS AUTOMÁTICOS
-        st.markdown("### 💡 ¿Qué estamos viendo?")
-        st.info("""
-        * **1.0 (Rojo intenso):** Relación positiva perfecta (si una sube, la otra también).
-        * **-1.0 (Azul intenso):** Relación negativa perfecta (si una sube, la otra baja).
-        * **0.0 (Blanco/Gris):** No hay relación estadística entre las variables.
-        """)
+    with tab_ia:
+        st.subheader("AI-Driven Insights (Groq)")
+        api_key = st.text_input("Introduce tu Groq API Key:", type="password")
         
-        # Mostrar las correlaciones más fuertes con el weekly_count
-        if 'weekly_count' in corr_matrix.columns:
-            st.write(f"**Top correlaciones con {indicador}:**")
-            top_corr = corr_matrix['weekly_count'].sort_values(ascending=False)
-            st.dataframe(top_corr)
-
-    with tab3:
-        st.subheader("Vista Previa del Dataset Filtrado")
-        st.dataframe(df_filtered)
+        if st.button("Generar Insights con IA"):
+            if not api_key:
+                st.error("Por favor, ingresa la API Key.")
+            else:
+                client = Groq(api_key=api_key)
+                # Resumen estadístico para el Prompt
+                stats_summary = df_filtered.describe().to_string()
+                
+                prompt = f"""
+                Actúa como un Consultor Senior de Datos. Analiza el siguiente resumen estadístico de datos de COVID-19:
+                {stats_summary}
+                
+                Responde a:
+                1. ¿Qué tendencias principales detectas?
+                2. ¿Qué riesgos sugieren los datos?
+                3. ¿Qué oportunidad de política pública existe?
+                """
+                
+                completion = client.chat.completions.create(
+                    model="llama3-8b-8192",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                st.markdown("### Análisis de la IA:")
+                st.write(completion.choices[0].message.content)
 
 else:
-    st.info("👋 Sube tu archivo CSV procesado para generar el análisis de correlación.")
+    st.info("Carga un CSV para activar el Sistema de Soporte a la Decisión.")
