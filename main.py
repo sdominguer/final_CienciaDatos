@@ -5,90 +5,105 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 # Configuración de la página
-st.set_page_config(page_title="COVID-19 Scientific Insights", layout="wide", page_icon="🧬")
+st.set_page_config(page_title="Pandemic Big Data Analysis", layout="wide", page_icon="📊")
 
-st.title("🔬 Análisis de Correlaciones Pandémicas")
-st.markdown("Este dashboard busca relaciones estadísticas reales entre variables climáticas, demográficas y epidemiológicas.")
+st.title("🧬 Análisis de Correlación Multivariable")
+st.markdown("Explora cómo interactúan **todas** las variables de tu dataset (Clima, Población, Salud y COVID).")
 
-uploaded_file = st.file_uploader("Carga el archivo CSV", type="csv")
+uploaded_file = st.file_uploader("Carga tu archivo CSV definitivo", type="csv")
 
 if uploaded_file is not None:
     @st.cache_data
-    def load_data(file):
+    def load_and_clean(file):
         df = pd.read_csv(file)
-        df['date'] = pd.to_datetime(df['date'])
-        # Limpieza estándar
-        df = df.sort_values('date')
-        # Formato para el mapa
-        df['fecha_str'] = df['date'].dt.strftime('%Y-%m-%d')
-        return df
+        # Convertir fechas
+        if 'date' in df.columns:
+            df['date'] = pd.to_datetime(df['date'])
+            df['fecha_str'] = df['date'].dt.strftime('%Y-%m-%d')
+        
+        # Seleccionamos solo las columnas que realmente aportan al análisis numérico
+        # Eliminamos IDs o columnas de texto que no tienen sentido en una correlación
+        cols_drop = ['year', 'week', 'month'] # Evitamos variables temporales redundantes
+        df_clean = df.drop(columns=[c for c in cols_drop if c in df.columns])
+        
+        return df_clean
 
-    df = load_data(uploaded_file)
+    df = load_and_clean(uploaded_file)
 
     # --- SIDEBAR ---
-    st.sidebar.header("Configuración")
-    indicador = st.sidebar.selectbox("Indicador Principal:", df['indicator'].unique())
+    st.sidebar.header("Filtros Globales")
+    indicador = st.sidebar.selectbox("Indicador COVID:", df['indicator'].unique())
     
     conts = sorted(df['continent'].unique().tolist())
     sel_conts = st.sidebar.multiselect("Continentes:", conts, default=conts)
     
     paises_disp = sorted(df[df["continent"].isin(sel_conts)]["country"].unique().tolist())
-    sel_paises = st.sidebar.multiselect("Países para comparar:", paises_disp, default=paises_disp[:5])
+    sel_paises = st.sidebar.multiselect("Países en análisis:", paises_disp, default=paises_disp[:10])
 
-    # Filtrado
-    df_anim = df[(df['indicator'] == indicador) & (df['continent'].isin(sel_conts))].copy()
-    df_filtered = df_anim[df_anim['country'].isin(sel_paises)]
+    # Filtrado dinámico
+    df_filtered = df[(df['indicator'] == indicador) & 
+                     (df['continent'].isin(sel_conts)) & 
+                     (df['country'].isin(sel_paises))]
 
     # --- TABS ---
-    tab1, tab2, tab3 = st.tabs(["🌍 Mapa de Difusión", "📉 Análisis de Correlación", "📊 Comparativa Temporal"])
+    tab1, tab2, tab3 = st.tabs(["🌍 Mapa del Tiempo", "📉 Correlación Total", "📋 Datos Crudos"])
 
     with tab1:
-        st.subheader(f"Evolución Histórica de {indicador}")
+        st.subheader(f"Propagación Histórica: {indicador}")
         fig_map = px.choropleth(
-            df_anim,
+            df[df['indicator'] == indicador], # Mapa global para contexto
             locations="ISO3",
             color="weekly_count",
             hover_name="country",
             animation_frame="fecha_str",
             color_continuous_scale="Viridis",
-            range_color=[0, df_anim['weekly_count'].quantile(0.95)],
             template="plotly_dark",
             height=600
         )
         st.plotly_chart(fig_map, use_container_width=True)
 
     with tab2:
-        st.subheader("🧬 Matriz de Correlación (Pearson)")
-        st.write("¿Qué variables están realmente relacionadas? (1.0 es relación perfecta, 0 es ninguna).")
+        st.subheader("🧪 Matriz de Correlación de Pearson (Todas las Variables)")
+        st.write("Esta matriz analiza la fuerza de la relación entre cada par de variables numéricas disponibles.")
         
-        # Seleccionamos solo columnas numéricas relevantes para la matriz
-        cols_corr = ['weekly_count', 'avg_temp', 'hospital_beds', 'population', 'rate_14_day']
-        # Nos aseguramos de que existan en el df
-        cols_existentes = [c for c in cols_corr if c in df_filtered.columns]
+        # 1. Filtramos solo columnas numéricas
+        df_numeric = df_filtered.select_dtypes(include=['float64', 'int64'])
         
-        corr_matrix = df_filtered[cols_existentes].corr()
+        # 2. Calculamos la matriz
+        corr_matrix = df_numeric.corr()
 
-        # Dibujar con Matplotlib/Seaborn
-        fig_corr, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(corr_matrix, annot=True, cmap='RdBu_r', center=0, ax=ax)
-        plt.title("Interdependencia entre Variables")
+        # 3. Visualización con Seaborn
+        fig_corr, ax = plt.subplots(figsize=(12, 8))
+        # Ajustamos el estilo para que se vea profesional
+        sns.heatmap(
+            corr_matrix, 
+            annot=True, 
+            fmt=".2f", 
+            cmap='coolwarm', 
+            center=0, 
+            linewidths=0.5,
+            ax=ax
+        )
+        plt.title(f"Correlación para {indicador} en Países Seleccionados")
         st.pyplot(fig_corr)
-        
+
+        # INSIGHTS AUTOMÁTICOS
+        st.markdown("### 💡 ¿Qué estamos viendo?")
         st.info("""
-        **Cómo leer esto:** * Si **avg_temp** y **weekly_count** tienen un número negativo alto, significa que cuando hace más frío, los casos aumentan.
-        * Si **hospital_beds** tiene correlación baja con **weekly_count**, la infraestructura no varió según los contagios.
+        * **1.0 (Rojo intenso):** Relación positiva perfecta (si una sube, la otra también).
+        * **-1.0 (Azul intenso):** Relación negativa perfecta (si una sube, la otra baja).
+        * **0.0 (Blanco/Gris):** No hay relación estadística entre las variables.
         """)
+        
+        # Mostrar las correlaciones más fuertes con el weekly_count
+        if 'weekly_count' in corr_matrix.columns:
+            st.write(f"**Top correlaciones con {indicador}:**")
+            top_corr = corr_matrix['weekly_count'].sort_values(ascending=False)
+            st.dataframe(top_corr)
 
     with tab3:
-        st.subheader("Tendencia por País")
-        fig_line = px.line(
-            df_filtered, 
-            x="date", y="weekly_count", color="country",
-            title=f"Línea de tiempo detallada: {indicador}",
-            template="plotly_dark",
-            markers=True
-        )
-        st.plotly_chart(fig_line, use_container_width=True)
+        st.subheader("Vista Previa del Dataset Filtrado")
+        st.dataframe(df_filtered)
 
 else:
-    st.info("Esperando el archivo CSV...")
+    st.info("👋 Sube tu archivo CSV procesado para generar el análisis de correlación.")
