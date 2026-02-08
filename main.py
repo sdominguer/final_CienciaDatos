@@ -699,7 +699,7 @@ if uploaded_file is not None:
             st.session_state.groq_api_key = ""
         
         # Sección de configuración
-        with st.expander("Configuracion de API", expanded=not st.session_state.groq_api_key):
+        with st.expander("⚙️ Configuracion de API", expanded=not st.session_state.groq_api_key):
             api_key_input = st.text_input(
                 "API Key de Groq:", 
                 type="password",
@@ -710,18 +710,21 @@ if uploaded_file is not None:
             
             if api_key_input:
                 st.session_state.groq_api_key = api_key_input
-                st.success("API Key configurada correctamente")
+                st.success("✅ API Key configurada correctamente")
+            
+            st.markdown("""
+                **Como obtener tu API Key:**
+                1. Visita [console.groq.com](https://console.groq.com)
+                2. Crea una cuenta gratuita
+                3. Ve a "API Keys" en el menu
+                4. Genera una nueva key
+                5. Copiala y pegala arriba
+            """)
         
-        # Controles del chat
-        col_info, col_clear = st.columns([4, 1])
-        with col_info:
-            if st.session_state.groq_api_key:
-                st.info("La IA tiene contexto completo de tu dataset. Hazle preguntas!")
-            else:
-                st.warning("Configura tu API Key para comenzar a chatear")
-        
-        with col_clear:
-            if st.button("Limpiar Chat", use_container_width=True):
+        # Controles del chat - CENTRADO
+        col1, col2, col3 = st.columns([2, 1, 2])
+        with col2:
+            if st.button("🗑️ Limpiar Chat", use_container_width=True, type="secondary"):
                 st.session_state.messages = []
                 st.rerun()
         
@@ -755,7 +758,7 @@ if uploaded_file is not None:
         # Input del usuario
         if prompt := st.chat_input("Escribe tu pregunta aqui...", key="chat_input"):
             if not st.session_state.groq_api_key:
-                st.error("Por favor, configura tu API Key de Groq primero en la seccion de Configuracion.")
+                st.error("⚠️ Por favor, configura tu API Key de Groq primero en la seccion de Configuracion.")
             else:
                 # Agregar mensaje del usuario
                 st.session_state.messages.append({"role": "user", "content": prompt})
@@ -833,11 +836,11 @@ INSTRUCCIONES DE RESPUESTA:
                                 "content": msg["content"]
                             })
                         
-                        # Llamada streaming a Groq
+                        # Llamada streaming a Groq con modelo actualizado
                         full_response = ""
                         
                         stream = client.chat.completions.create(
-                            model="llama-3.3-70b-versatile",
+                            model="llama-3.3-70b-versatile",  # ← MODELO ACTUALIZADO
                             messages=messages_for_api,
                             temperature=0.7,
                             max_tokens=2048,
@@ -864,39 +867,38 @@ INSTRUCCIONES DE RESPUESTA:
                         error_msg = f"**Error al conectar con Groq:**\n\n`{str(e)}`\n\nVerifica que tu API Key sea valida y tengas conexion a internet."
                         message_placeholder.error(error_msg)
         
-        # Sección de preguntas sugeridas
-        st.markdown("---")
-        st.markdown("#### Preguntas Sugeridas")
-        st.caption("Haz clic en cualquier pregunta para enviarla automaticamente")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        suggestions = [
-            ("📊", "Cual es la correlacion entre temperatura e incidencia de casos?"),
-            ("🏥", "Como afecta la infraestructura hospitalaria a la tasa de letalidad?"),
-            ("🌍", "Que continente presenta el mayor impacto segun los datos?"),
-            ("📈", "Identifica los 5 paises con mayor tasa de letalidad"),
-            ("🔍", "Hay algun patron interesante en los datos que deba considerar?"),
-            ("💊", "Dame 3 recomendaciones basadas en el analisis del dataset")
-        ]
-        
-        cols = [col1, col2, col3, col1, col2, col3]
-        
-        for idx, (emoji, question) in enumerate(suggestions):
-            with cols[idx]:
-                if st.button(f"{emoji} {question[:40]}...", key=f"sugg_{idx}", use_container_width=True):
-                    # Simular envío de la pregunta
-                    if st.session_state.groq_api_key:
-                        st.session_state.messages.append({"role": "user", "content": question})
-                        st.rerun()
-                    else:
-                        st.error("Configura tu API Key primero")
-        
-        # Estadísticas del chat
-        if len(st.session_state.messages) > 0:
-            st.markdown("---")
+        # Sección de preguntas sugeridas (minimalista)
+        if len(st.session_state.messages) == 0:  # Solo mostrar si no hay conversación
+            with st.expander("💡 Preguntas sugeridas", expanded=False):
+                suggestions = [
+                    ("📊", "Correlacion temperatura vs casos"),
+                    ("🏥", "Impacto infraestructura hospitalaria"),
+                    ("🌍", "Continente con mayor impacto"),
+                    ("📈", "Top 5 paises por letalidad"),
+                    ("🔍", "Patrones interesantes en datos"),
+                    ("💊", "Recomendaciones del analisis")
+                ]
+                
+                questions_full = [
+                    "Cual es la correlacion entre temperatura e incidencia de casos?",
+                    "Como afecta la infraestructura hospitalaria a la tasa de letalidad?",
+                    "Que continente presenta el mayor impacto segun los datos?",
+                    "Identifica los 5 paises con mayor tasa de letalidad",
+                    "Hay algun patron interesante en los datos que deba considerar?",
+                    "Dame 3 recomendaciones basadas en el analisis del dataset"
+                ]
+                
+                for idx, (emoji, question) in enumerate(suggestions):
+                    if st.button(f"{emoji} {question}", key=f"sugg_{idx}", use_container_width=True):
+                        if st.session_state.groq_api_key:
+                            st.session_state.messages.append({"role": "user", "content": questions_full[idx]})
+                            st.rerun()
+                        else:
+                            st.error("⚠️ Configura tu API Key primero")
+        else:
+            # Estadísticas del chat (minimalista)
             user_msgs = len([m for m in st.session_state.messages if m["role"] == "user"])
-            st.caption(f"Conversacion activa: {user_msgs} preguntas realizadas")
+            st.caption(f"💬 {user_msgs} preguntas realizadas")
 
 else:
     # Pantalla de bienvenida mejorada
