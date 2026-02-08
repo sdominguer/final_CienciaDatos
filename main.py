@@ -13,14 +13,15 @@ st.set_page_config(
     page_icon="🧬"
 )
 
-# --- PALETA DE COLORES ---
-# Primary: #0F172A (dark navy)
-# Accent:  #06B6D4 (cyan/teal)
-# Surface: #F8FAFC (off-white)
-# Card:    #FFFFFF
-# Muted:   #94A3B8 (slate)
-# Success: #10B981
-# Danger:  #EF4444
+# --- PALETA DE COLORES (DARK MODE) ---
+# Background: #0B0F19 (deep navy-black)
+# Surface:    #111827 (dark card)
+# Elevated:   #1F2937 (raised surface)
+# Border:     #1E293B (subtle border)
+# Accent:     #22D3EE (vivid cyan)
+# Accent 2:   #818CF8 (indigo)
+# Text:       #F1F5F9 (off-white)
+# Muted:      #64748B (slate)
 
 # --- ESTILOS PERSONALIZADOS ---
 st.markdown("""
@@ -28,69 +29,94 @@ st.markdown("""
     /* ── Global ── */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-    html, body, .main, [data-testid="stAppViewContainer"] {
-        background-color: #F1F5F9 !important;
+    html, body, .main, [data-testid="stAppViewContainer"],
+    [data-testid="stApp"], .stApp {
+        background-color: #0B0F19 !important;
         font-family: 'Inter', sans-serif;
+        color: #E2E8F0 !important;
+    }
+
+    /* All text defaults */
+    .stMarkdown, .stMarkdown p, .stMarkdown li, .stMarkdown span,
+    label, .stText, p {
+        color: #CBD5E1 !important;
+    }
+    h1, h2, h3, h4, h5, h6 {
+        color: #F1F5F9 !important;
+    }
+    strong, b {
+        color: #F1F5F9 !important;
     }
 
     /* ── Sidebar ── */
     [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0F172A 0%, #1E293B 100%) !important;
+        background: linear-gradient(180deg, #0D1117 0%, #111827 100%) !important;
+        border-right: 1px solid #1E293B !important;
     }
     [data-testid="stSidebar"] * {
-        color: #E2E8F0 !important;
+        color: #CBD5E1 !important;
     }
     [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3, [data-testid="stSidebar"] .stMarkdown h1,
     [data-testid="stSidebar"] .stMarkdown h2, [data-testid="stSidebar"] .stMarkdown h3 {
-        color: #FFFFFF !important;
+        color: #F1F5F9 !important;
         font-weight: 700 !important;
     }
     [data-testid="stSidebar"] .stSelectbox label,
     [data-testid="stSidebar"] .stMultiSelect label,
     [data-testid="stSidebar"] .stFileUploader label,
     [data-testid="stSidebar"] .stCheckbox label {
-        color: #CBD5E1 !important;
-        font-weight: 500 !important;
+        color: #64748B !important;
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        font-size: 11px !important;
+        letter-spacing: 0.05em;
+    }
+    [data-testid="stSidebar"] .stSelectbox > div > div,
+    [data-testid="stSidebar"] .stMultiSelect > div > div {
+        background: #1F2937 !important;
+        border-color: #334155 !important;
+        color: #E2E8F0 !important;
     }
     [data-testid="stSidebar"] .stFileUploader > div {
         border: 2px dashed #334155 !important;
         border-radius: 12px !important;
-        background: rgba(255,255,255,0.03) !important;
+        background: rgba(255,255,255,0.02) !important;
     }
     [data-testid="stSidebar"] .stFileUploader > div:hover {
-        border-color: #06B6D4 !important;
-        background: rgba(6,182,212,0.05) !important;
+        border-color: #22D3EE !important;
+        background: rgba(34,211,238,0.04) !important;
     }
     [data-testid="stSidebar"] hr {
-        border-color: #334155 !important;
+        border-color: #1E293B !important;
     }
 
     /* ── Tabs ── */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background: #FFFFFF;
-        border-radius: 16px;
-        padding: 6px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        gap: 6px;
+        background: #111827;
+        border-radius: 14px;
+        padding: 5px;
+        border: 1px solid #1E293B;
     }
     .stTabs [data-baseweb="tab"] {
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         padding: 10px 20px !important;
         font-weight: 600 !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         color: #64748B !important;
         background: transparent !important;
         border: none !important;
         transition: all 0.2s ease;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        background: #F1F5F9 !important;
-        color: #0F172A !important;
+        background: #1F2937 !important;
+        color: #CBD5E1 !important;
     }
     .stTabs [aria-selected="true"] {
-        background: #0F172A !important;
-        color: #FFFFFF !important;
+        background: linear-gradient(135deg, #22D3EE 0%, #818CF8 100%) !important;
+        color: #0B0F19 !important;
+        font-weight: 700 !important;
     }
     .stTabs [data-baseweb="tab-highlight"] {
         display: none !important;
@@ -101,26 +127,26 @@ st.markdown("""
 
     /* ── Metric Cards ── */
     [data-testid="stMetric"] {
-        background: #FFFFFF;
+        background: #111827;
         padding: 20px 24px;
         border-radius: 16px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-        border: 1px solid #E2E8F0;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #1E293B;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
     [data-testid="stMetric"]:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #22D3EE;
+        box-shadow: 0 4px 20px rgba(34,211,238,0.1);
     }
     [data-testid="stMetric"] label {
         color: #64748B !important;
         font-weight: 600 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.06em;
     }
     [data-testid="stMetric"] [data-testid="stMetricValue"] {
-        color: #0F172A !important;
+        color: #F1F5F9 !important;
         font-weight: 800 !important;
         font-size: 28px !important;
     }
@@ -129,68 +155,99 @@ st.markdown("""
     .stButton > button {
         border-radius: 12px !important;
         font-weight: 600 !important;
-        border: 1px solid #E2E8F0 !important;
-        background: #FFFFFF !important;
-        color: #334155 !important;
+        border: 1px solid #334155 !important;
+        background: #1F2937 !important;
+        color: #CBD5E1 !important;
         padding: 8px 16px !important;
         transition: all 0.2s ease !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.04) !important;
     }
     .stButton > button:hover {
-        border-color: #06B6D4 !important;
-        color: #06B6D4 !important;
-        background: #F0FDFA !important;
+        border-color: #22D3EE !important;
+        color: #22D3EE !important;
+        background: rgba(34,211,238,0.08) !important;
         transform: translateY(-1px) !important;
-        box-shadow: 0 4px 8px rgba(6,182,212,0.12) !important;
+        box-shadow: 0 4px 12px rgba(34,211,238,0.15) !important;
     }
 
     /* ── Expanders ── */
     .streamlit-expanderHeader {
         font-weight: 600 !important;
-        font-size: 15px !important;
-        color: #0F172A !important;
-        background: #FFFFFF !important;
+        font-size: 14px !important;
+        color: #E2E8F0 !important;
+        background: #111827 !important;
         border-radius: 12px !important;
-        border: 1px solid #E2E8F0 !important;
+        border: 1px solid #1E293B !important;
+    }
+    [data-testid="stExpander"] {
+        background: #111827 !important;
+        border: 1px solid #1E293B !important;
+        border-radius: 12px !important;
     }
 
     /* ── DataFrame ── */
     [data-testid="stDataFrame"] {
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid #E2E8F0;
+        border: 1px solid #1E293B;
     }
 
     /* ── Chat ── */
     [data-testid="stChatMessage"] {
-        background: #FFFFFF !important;
+        background: #111827 !important;
         border-radius: 16px !important;
         padding: 16px 20px !important;
         margin-bottom: 12px !important;
-        border: 1px solid #E2E8F0 !important;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.03) !important;
+        border: 1px solid #1E293B !important;
+    }
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] li {
+        color: #CBD5E1 !important;
     }
 
     [data-testid="stChatInput"] > div {
         border-radius: 16px !important;
-        border: 2px solid #E2E8F0 !important;
-        background: #FFFFFF !important;
+        border: 2px solid #1E293B !important;
+        background: #111827 !important;
         transition: border-color 0.2s ease;
     }
     [data-testid="stChatInput"] > div:focus-within {
-        border-color: #06B6D4 !important;
-        box-shadow: 0 0 0 3px rgba(6,182,212,0.1) !important;
+        border-color: #22D3EE !important;
+        box-shadow: 0 0 0 3px rgba(34,211,238,0.1) !important;
+    }
+    [data-testid="stChatInput"] input,
+    [data-testid="stChatInput"] textarea {
+        color: #E2E8F0 !important;
+    }
+
+    /* ── Text Input (API key, etc.) ── */
+    .stTextInput > div > div {
+        background: #1F2937 !important;
+        border-color: #334155 !important;
+        border-radius: 12px !important;
+        color: #E2E8F0 !important;
+    }
+    .stTextInput input {
+        color: #E2E8F0 !important;
+    }
+
+    /* ── Selectbox / Multiselect ── */
+    .stSelectbox > div > div, .stMultiSelect > div > div {
+        border-radius: 12px !important;
+        background: #1F2937 !important;
+        border-color: #334155 !important;
     }
 
     /* ── Custom Components ── */
     .hero-header {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+        background: linear-gradient(135deg, #0D1117 0%, #111827 40%, #0D1117 100%);
         padding: 40px 48px;
         border-radius: 24px;
         color: white;
         margin-bottom: 32px;
         position: relative;
         overflow: hidden;
+        border: 1px solid #1E293B;
     }
     .hero-header::before {
         content: '';
@@ -199,7 +256,7 @@ st.markdown("""
         right: -20%;
         width: 400px;
         height: 400px;
-        background: radial-gradient(circle, rgba(6,182,212,0.15) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(34,211,238,0.12) 0%, transparent 70%);
         border-radius: 50%;
     }
     .hero-header::after {
@@ -209,7 +266,7 @@ st.markdown("""
         left: -10%;
         width: 300px;
         height: 300px;
-        background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(129,140,248,0.08) 0%, transparent 70%);
         border-radius: 50%;
     }
     .hero-header h1 {
@@ -219,9 +276,10 @@ st.markdown("""
         position: relative;
         z-index: 1;
         letter-spacing: -0.5px;
+        color: #F1F5F9;
     }
     .hero-header p {
-        color: #94A3B8;
+        color: #64748B;
         font-size: 16px;
         margin: 0;
         position: relative;
@@ -229,20 +287,21 @@ st.markdown("""
     }
     .hero-badge {
         display: inline-block;
-        background: rgba(6,182,212,0.15);
-        color: #06B6D4;
+        background: rgba(34,211,238,0.1);
+        color: #22D3EE;
         padding: 4px 14px;
         border-radius: 20px;
         font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
         margin-bottom: 16px;
         position: relative;
         z-index: 1;
+        border: 1px solid rgba(34,211,238,0.2);
     }
 
     .chat-header-card {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        background: linear-gradient(135deg, #0D1117 0%, #111827 100%);
         padding: 32px;
         border-radius: 20px;
         color: white;
@@ -250,6 +309,7 @@ st.markdown("""
         margin-bottom: 24px;
         position: relative;
         overflow: hidden;
+        border: 1px solid #1E293B;
     }
     .chat-header-card::before {
         content: '';
@@ -258,7 +318,7 @@ st.markdown("""
         right: -15%;
         width: 200px;
         height: 200px;
-        background: radial-gradient(circle, rgba(6,182,212,0.2) 0%, transparent 70%);
+        background: radial-gradient(circle, rgba(34,211,238,0.15) 0%, transparent 70%);
         border-radius: 50%;
     }
     .chat-header-card h2 {
@@ -267,9 +327,10 @@ st.markdown("""
         margin: 0 0 8px 0;
         position: relative;
         z-index: 1;
+        color: #F1F5F9;
     }
     .chat-header-card p {
-        color: #94A3B8;
+        color: #64748B;
         font-size: 14px;
         margin: 0;
         position: relative;
@@ -277,22 +338,21 @@ st.markdown("""
     }
 
     .section-card {
-        background: #FFFFFF;
+        background: #111827;
         padding: 28px;
         border-radius: 20px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        border: 1px solid #1E293B;
         margin-bottom: 20px;
     }
     .section-title {
         font-size: 18px;
         font-weight: 700;
-        color: #0F172A;
+        color: #F1F5F9;
         margin: 0 0 4px 0;
     }
     .section-subtitle {
         font-size: 13px;
-        color: #94A3B8;
+        color: #64748B;
         margin: 0 0 20px 0;
     }
 
@@ -303,19 +363,19 @@ st.markdown("""
     .welcome-icon {
         width: 80px;
         height: 80px;
-        background: linear-gradient(135deg, #06B6D4 0%, #6366F1 100%);
+        background: linear-gradient(135deg, #22D3EE 0%, #818CF8 100%);
         border-radius: 24px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-size: 36px;
         margin-bottom: 28px;
-        box-shadow: 0 8px 24px rgba(6,182,212,0.25);
+        box-shadow: 0 8px 32px rgba(34,211,238,0.25);
     }
     .welcome-container h2 {
         font-size: 28px;
         font-weight: 800;
-        color: #0F172A;
+        color: #F1F5F9;
         margin: 0 0 12px 0;
         letter-spacing: -0.5px;
     }
@@ -334,16 +394,16 @@ st.markdown("""
         margin: 0 auto;
     }
     .feature-item {
-        background: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        background: #111827;
+        border: 1px solid #1E293B;
         border-radius: 16px;
         padding: 20px;
         text-align: left;
         transition: all 0.2s ease;
     }
     .feature-item:hover {
-        border-color: #06B6D4;
-        box-shadow: 0 4px 12px rgba(6,182,212,0.08);
+        border-color: #22D3EE;
+        box-shadow: 0 4px 20px rgba(34,211,238,0.08);
     }
     .feature-item .icon {
         font-size: 24px;
@@ -352,23 +412,23 @@ st.markdown("""
     .feature-item .label {
         font-size: 14px;
         font-weight: 600;
-        color: #0F172A;
+        color: #E2E8F0;
         margin: 0 0 4px 0;
     }
     .feature-item .desc {
         font-size: 12px;
-        color: #94A3B8;
+        color: #64748B;
         margin: 0;
     }
 
     .footer {
         text-align: center;
         padding: 24px 0 8px 0;
-        color: #94A3B8;
+        color: #475569;
         font-size: 13px;
     }
     .footer a {
-        color: #06B6D4;
+        color: #22D3EE;
         text-decoration: none;
         font-weight: 600;
     }
@@ -378,15 +438,28 @@ st.markdown("""
         padding-top: 2rem !important;
     }
 
-    /* Selectbox / Multiselect inside main area */
-    .stSelectbox > div > div, .stMultiSelect > div > div {
-        border-radius: 12px !important;
-    }
-
     /* Alerts */
     .stAlert > div {
         border-radius: 12px !important;
+        background: #1F2937 !important;
+        border-color: #334155 !important;
     }
+
+    /* Horizontal rule */
+    hr {
+        border-color: #1E293B !important;
+    }
+
+    /* Caption */
+    .stCaption, [data-testid="stCaption"] {
+        color: #475569 !important;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0B0F19; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -502,11 +575,19 @@ if uploaded_file is not None:
         fig_corr, ax = plt.subplots(figsize=(10, 6))
         sns.heatmap(
             df_corr, annot=True, cmap="coolwarm", center=0, fmt=".2f", ax=ax,
-            linewidths=0.5, linecolor='#F1F5F9',
-            cbar_kws={"shrink": 0.8}
+            linewidths=0.5, linecolor='#1E293B',
+            cbar_kws={"shrink": 0.8},
+            annot_kws={"color": "#E2E8F0", "fontsize": 10}
         )
-        ax.set_facecolor('#FFFFFF')
-        fig_corr.patch.set_facecolor('#F1F5F9')
+        ax.set_facecolor('#111827')
+        fig_corr.patch.set_facecolor('#0B0F19')
+        ax.tick_params(colors='#94A3B8', labelsize=10)
+        for text in ax.get_xticklabels() + ax.get_yticklabels():
+            text.set_color('#94A3B8')
+        cbar = ax.collections[0].colorbar
+        if cbar:
+            cbar.ax.tick_params(colors='#94A3B8')
+            cbar.outline.set_edgecolor('#1E293B')
         plt.tight_layout()
         st.pyplot(fig_corr)
 
@@ -529,14 +610,16 @@ if uploaded_file is not None:
             st.markdown("**Distribucion de la Tasa de Letalidad**")
             fig_hist = px.histogram(
                 df_viz, x="letalidad_pct", marginal="box", 
-                color_discrete_sequence=['#06B6D4'],
-                template="plotly_white"
+                color_discrete_sequence=['#22D3EE'],
+                template="plotly_dark"
             )
             fig_hist.update_layout(
-                plot_bgcolor='#FFFFFF',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter", size=12),
-                margin=dict(t=30, b=30)
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=12, color='#94A3B8'),
+                margin=dict(t=30, b=30),
+                xaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
+                yaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
             )
             st.plotly_chart(fig_hist, use_container_width=True)
             
@@ -548,20 +631,24 @@ if uploaded_file is not None:
                 hover_name="country",
                 hover_data={"size_ref": False, "camas_por_100k": True},
                 trendline="ols",
-                color_discrete_sequence=px.colors.qualitative.Set2,
-                template="plotly_white"
+                color_discrete_sequence=['#22D3EE', '#818CF8', '#34D399', '#F472B6', '#FBBF24', '#FB923C'],
+                template="plotly_dark"
             )
             fig_scat.update_layout(
-                plot_bgcolor='#FFFFFF',
-                paper_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter", size=12),
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=12, color='#94A3B8'),
                 margin=dict(t=30, b=30),
+                xaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
+                yaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
                     y=-0.25,
                     xanchor="center",
-                    x=0.5
+                    x=0.5,
+                    font=dict(color='#94A3B8'),
+                    bgcolor='rgba(0,0,0,0)'
                 )
             )
             st.plotly_chart(fig_scat, use_container_width=True)
@@ -569,22 +656,28 @@ if uploaded_file is not None:
         st.markdown("**Impacto Geografico Global**")
         fig_map = px.choropleth(
             df_viz, locations="ISO3", color="casos_100k", 
-            hover_name="country", color_continuous_scale="Tealgrn",
-            template="plotly_white"
+            hover_name="country", color_continuous_scale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
+            template="plotly_dark"
         )
         fig_map.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='#0B0F19',
             geo=dict(
-                bgcolor='rgba(0,0,0,0)',
+                bgcolor='#0B0F19',
                 showframe=False,
                 showcoastlines=True,
-                coastlinecolor='#CBD5E1',
-                landcolor='#F1F5F9',
-                lakecolor='#E2E8F0'
+                coastlinecolor='#334155',
+                landcolor='#1F2937',
+                lakecolor='#111827',
+                oceancolor='#0B0F19',
+                showocean=True,
             ),
-            font=dict(family="Inter", size=12),
+            font=dict(family="Inter", size=12, color='#94A3B8'),
             margin=dict(t=20, b=20, l=0, r=0),
-            height=500
+            height=500,
+            coloraxis_colorbar=dict(
+                tickfont=dict(color='#94A3B8'),
+                title=dict(font=dict(color='#94A3B8'))
+            )
         )
         st.plotly_chart(fig_map, use_container_width=True)
 
@@ -849,7 +942,7 @@ else:
 # --- PIE DE PÁGINA ---
 st.markdown("""
 <div class="footer">
-    <hr style="border-color: #E2E8F0; margin-bottom: 16px;">
+    <hr style="border-color: #1E293B; margin-bottom: 16px;">
     Proyecto Final: Sistema de Soporte a la Decision &nbsp;·&nbsp; Powered by <a href="https://groq.com" target="_blank">Groq AI</a> & <a href="https://streamlit.io" target="_blank">Streamlit</a>
 </div>
 """, unsafe_allow_html=True)
