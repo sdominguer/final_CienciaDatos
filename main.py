@@ -2,9 +2,11 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go
 import seaborn as sns
 import matplotlib.pyplot as plt
 from groq import Groq
+from datetime import datetime
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
@@ -518,10 +520,10 @@ if uploaded_file is not None:
 
     # --- ESTRUCTURA DE PESTAÑAS (Requisito 2.2) ---
     tab_desc, tab_cuant, tab_graf, tab_ia = st.tabs([
-        "  Analisis Descriptivo  ", 
-        "  Analisis Cuantitativo  ", 
-        "  Analisis Grafico  ", 
-        "  AI Analyst (Groq)  "
+        "  📋 Analisis Descriptivo  ", 
+        "  📊 Analisis Cuantitativo  ", 
+        "  📈 Visualizaciones Dinamicas  ", 
+        "  🤖 AI Analyst  "
     ])
 
     # --- TAB 1: ANÁLISIS DESCRIPTIVO (Cualitativo) ---
@@ -558,19 +560,58 @@ if uploaded_file is not None:
     with tab_cuant:
         st.markdown("""
         <div class="section-card">
-            <p class="section-title">Correlaciones Estadisticas</p>
-            <p class="section-subtitle">Metricas de resumen y matriz de correlacion de Pearson</p>
+            <p class="section-title">Correlaciones y Estadisticas</p>
+            <p class="section-subtitle">Metricas de resumen, distribuciones y matriz de correlacion</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Métricas de Resumen
-        m1, m2, m3 = st.columns(3)
+        m1, m2, m3, m4 = st.columns(4)
         m1.metric("Letalidad Media (%)", f"{df_final['letalidad_pct'].mean():.4f}%")
-        m2.metric("Promedio Incidencia x 100k", f"{df_final['casos_100k'].mean():.2f}")
-        m3.metric("Temp. Promedio Seleccion", f"{df_final['avg_temp'].mean():.1f} °C")
+        m2.metric("Incidencia x 100k", f"{df_final['casos_100k'].mean():.2f}")
+        m3.metric("Temp. Promedio", f"{df_final['avg_temp'].mean():.1f} °C")
+        m4.metric("Paises Analizados", f"{df_final['country'].nunique()}")
         
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("**Matriz de Correlacion de Pearson**")
+        
+        # Sección de estadísticas descriptivas
+        col_stat1, col_stat2 = st.columns(2)
+        
+        with col_stat1:
+            st.markdown("**📊 Estadisticas Descriptivas**")
+            stats_df = df_final[num_cols].describe().T
+            stats_df = stats_df[['mean', 'std', 'min', '25%', '50%', '75%', 'max']]
+            stats_df.columns = ['Media', 'Desv.Est', 'Min', 'Q1', 'Mediana', 'Q3', 'Max']
+            st.dataframe(stats_df.round(2), use_container_width=True)
+        
+        with col_stat2:
+            st.markdown("**📦 Box Plot - Distribucion por Continente**")
+            var_boxplot = st.selectbox("Variable para Box Plot:", 
+                                       ['letalidad_pct', 'casos_100k', 'camas_por_100k', 'avg_temp'],
+                                       key='boxplot_var')
+            
+            fig_box = px.box(
+                df_final, 
+                x="continent", 
+                y=var_boxplot,
+                color="continent",
+                color_discrete_sequence=['#22D3EE', '#818CF8', '#34D399', '#F472B6', '#FBBF24', '#FB923C'],
+                template="plotly_dark"
+            )
+            fig_box.update_layout(
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=11, color='#94A3B8'),
+                margin=dict(t=10, b=10, l=10, r=10),
+                xaxis=dict(gridcolor='#1E293B', title=""),
+                yaxis=dict(gridcolor='#1E293B'),
+                showlegend=False,
+                height=300
+            )
+            st.plotly_chart(fig_box, use_container_width=True)
+        
+        st.markdown("---")
+        st.markdown("**🔗 Matriz de Correlacion de Pearson**")
         df_corr = df_final[num_cols].corr()
         fig_corr, ax = plt.subplots(figsize=(10, 6))
         sns.heatmap(
@@ -591,95 +632,334 @@ if uploaded_file is not None:
         plt.tight_layout()
         st.pyplot(fig_corr)
 
-    # --- TAB 3: ANÁLISIS GRÁFICO (EDA Dinámico) ---
+    # --- TAB 3: VISUALIZACIONES DINÁMICAS (MEJORADO) ---
     with tab_graf:
         st.markdown("""
         <div class="section-card">
-            <p class="section-title">Visualizaciones Interactivas</p>
-            <p class="section-subtitle">Exploracion visual de distribuciones, relaciones y geografia</p>
+            <p class="section-title">Exploracion Visual Interactiva</p>
+            <p class="section-subtitle">Graficos dinamicos con controles de filtrado y comparacion</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Fix para el error de 'size' en Plotly (no permite ceros ni nulos)
+        # Fix para el error de 'size' en Plotly
         df_viz = df_final.copy()
         df_viz['size_ref'] = df_viz['camas_por_100k'].fillna(0).apply(lambda x: x if x > 0 else 0.1)
-
-        col_a, col_b = st.columns(2)
         
-        with col_a:
-            st.markdown("**Distribucion de la Tasa de Letalidad**")
+        # --- SECCIÓN 1: EVOLUCIÓN TEMPORAL ---
+        if 'date' in df_viz.columns or 'year_week' in df_viz.columns:
+            st.markdown("### ⏱️ Evolucion Temporal")
+            
+            # Determinar columna temporal
+            time_col = 'date' if 'date' in df_viz.columns else 'year_week'
+            
+            # Convertir a datetime si es necesario
+            if time_col == 'date':
+                try:
+                    df_viz[time_col] = pd.to_datetime(df_viz[time_col])
+                except:
+                    pass
+            
+            col_time1, col_time2 = st.columns([1, 3])
+            
+            with col_time1:
+                paises_time = st.multiselect(
+                    "Selecciona Paises:",
+                    options=sorted(df_viz['country'].unique()),
+                    default=sorted(df_viz['country'].unique())[:5] if len(df_viz['country'].unique()) >= 5 else sorted(df_viz['country'].unique()),
+                    key='time_countries'
+                )
+                
+                var_time = st.selectbox(
+                    "Variable a graficar:",
+                    ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
+                    key='time_var'
+                )
+            
+            with col_time2:
+                if paises_time:
+                    df_time = df_viz[df_viz['country'].isin(paises_time)].sort_values(time_col)
+                    
+                    fig_time = px.line(
+                        df_time,
+                        x=time_col,
+                        y=var_time,
+                        color='country',
+                        title=f"Evolucion de {var_time} en el tiempo",
+                        color_discrete_sequence=['#22D3EE', '#818CF8', '#34D399', '#F472B6', '#FBBF24'],
+                        template="plotly_dark"
+                    )
+                    fig_time.update_layout(
+                        plot_bgcolor='#111827',
+                        paper_bgcolor='#0B0F19',
+                        font=dict(family="Inter", size=12, color='#94A3B8'),
+                        margin=dict(t=40, b=20),
+                        xaxis=dict(gridcolor='#1E293B'),
+                        yaxis=dict(gridcolor='#1E293B'),
+                        hovermode='x unified',
+                        height=400
+                    )
+                    st.plotly_chart(fig_time, use_container_width=True)
+                else:
+                    st.info("Selecciona al menos un pais para visualizar")
+            
+            st.markdown("---")
+        
+        # --- SECCIÓN 2: COMPARACIÓN DE PAÍSES (TOP/BOTTOM) ---
+        st.markdown("### 🏆 Ranking de Paises")
+        
+        col_rank1, col_rank2 = st.columns(2)
+        
+        with col_rank1:
+            var_ranking = st.selectbox(
+                "Variable para Ranking:",
+                ['letalidad_pct', 'casos_100k', 'camas_por_100k'],
+                key='rank_var'
+            )
+            
+            n_paises = st.slider("Numero de paises:", 5, 20, 10, key='n_rank')
+        
+        with col_rank2:
+            tipo_ranking = st.radio(
+                "Tipo de Ranking:",
+                ['Top (Mayores)', 'Bottom (Menores)'],
+                horizontal=True,
+                key='rank_type'
+            )
+        
+        # Calcular ranking
+        df_ranking = df_viz.groupby('country')[var_ranking].mean().reset_index()
+        df_ranking = df_ranking.sort_values(var_ranking, ascending=(tipo_ranking == 'Bottom (Menores)'))
+        df_ranking = df_ranking.head(n_paises)
+        
+        fig_rank = px.bar(
+            df_ranking,
+            y='country',
+            x=var_ranking,
+            orientation='h',
+            title=f"{tipo_ranking} {n_paises} paises por {var_ranking}",
+            color=var_ranking,
+            color_continuous_scale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
+            template="plotly_dark"
+        )
+        fig_rank.update_layout(
+            plot_bgcolor='#111827',
+            paper_bgcolor='#0B0F19',
+            font=dict(family="Inter", size=12, color='#94A3B8'),
+            margin=dict(t=40, b=20),
+            xaxis=dict(gridcolor='#1E293B'),
+            yaxis=dict(gridcolor='#1E293B', title=""),
+            height=400,
+            showlegend=False
+        )
+        st.plotly_chart(fig_rank, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # --- SECCIÓN 3: ANÁLISIS BIVARIADO AVANZADO ---
+        st.markdown("### 🔍 Analisis de Relaciones")
+        
+        col_scatter1, col_scatter2 = st.columns([1, 2])
+        
+        with col_scatter1:
+            var_x = st.selectbox("Variable X:", ['avg_temp', 'camas_por_100k', 'casos_100k'], key='scatter_x')
+            var_y = st.selectbox("Variable Y:", ['casos_100k', 'letalidad_pct', 'camas_por_100k'], key='scatter_y')
+            color_by = st.selectbox("Colorear por:", ['continent', 'country'], key='scatter_color')
+            show_trendline = st.checkbox("Mostrar linea de tendencia", value=True, key='scatter_trend')
+        
+        with col_scatter2:
+            fig_scatter = px.scatter(
+                df_viz,
+                x=var_x,
+                y=var_y,
+                size='size_ref',
+                color=color_by,
+                hover_name='country',
+                hover_data={'size_ref': False, 'camas_por_100k': True, 'continent': True},
+                trendline='ols' if show_trendline else None,
+                title=f"Relacion entre {var_x} y {var_y}",
+                color_discrete_sequence=['#22D3EE', '#818CF8', '#34D399', '#F472B6', '#FBBF24', '#FB923C'],
+                template="plotly_dark"
+            )
+            fig_scatter.update_layout(
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=12, color='#94A3B8'),
+                margin=dict(t=40, b=20),
+                xaxis=dict(gridcolor='#1E293B'),
+                yaxis=dict(gridcolor='#1E293B'),
+                height=450
+            )
+            st.plotly_chart(fig_scatter, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # --- SECCIÓN 4: DISTRIBUCIONES Y MAPAS ---
+        col_dist1, col_dist2 = st.columns(2)
+        
+        with col_dist1:
+            st.markdown("**📊 Distribucion con Histograma**")
+            var_hist = st.selectbox("Variable:", ['letalidad_pct', 'casos_100k', 'avg_temp'], key='hist_var')
+            
             fig_hist = px.histogram(
-                df_viz, x="letalidad_pct", marginal="box", 
+                df_viz,
+                x=var_hist,
+                marginal='box',
+                nbins=30,
                 color_discrete_sequence=['#22D3EE'],
                 template="plotly_dark"
             )
             fig_hist.update_layout(
                 plot_bgcolor='#111827',
                 paper_bgcolor='#0B0F19',
-                font=dict(family="Inter", size=12, color='#94A3B8'),
-                margin=dict(t=30, b=30),
-                xaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
-                yaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
+                font=dict(family="Inter", size=11, color='#94A3B8'),
+                margin=dict(t=10, b=10),
+                xaxis=dict(gridcolor='#1E293B'),
+                yaxis=dict(gridcolor='#1E293B'),
+                height=350,
+                showlegend=False
             )
             st.plotly_chart(fig_hist, use_container_width=True)
+        
+        with col_dist2:
+            st.markdown("**🌡️ Heatmap de Correlaciones por Continente**")
+            cont_heatmap = st.selectbox("Continente:", df_viz['continent'].unique(), key='heatmap_cont')
             
-        with col_b:
-            st.markdown("**Relacion Temperatura vs Incidencia**")
-            fig_scat = px.scatter(
-                df_viz, x="avg_temp", y="casos_100k", 
-                size="size_ref", color="continent", 
-                hover_name="country",
-                hover_data={"size_ref": False, "camas_por_100k": True},
-                trendline="ols",
-                color_discrete_sequence=['#22D3EE', '#818CF8', '#34D399', '#F472B6', '#FBBF24', '#FB923C'],
+            df_cont = df_viz[df_viz['continent'] == cont_heatmap]
+            corr_cont = df_cont[num_cols].corr()
+            
+            fig_heatmap = go.Figure(data=go.Heatmap(
+                z=corr_cont.values,
+                x=corr_cont.columns,
+                y=corr_cont.columns,
+                colorscale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
+                text=corr_cont.values.round(2),
+                texttemplate='%{text}',
+                textfont={"size": 10, "color": "#E2E8F0"}
+            ))
+            fig_heatmap.update_layout(
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=10, color='#94A3B8'),
+                margin=dict(t=10, b=10, l=10, r=10),
+                height=350
+            )
+            st.plotly_chart(fig_heatmap, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # --- SECCIÓN 5: MAPA GEOGRÁFICO ---
+        st.markdown("### 🌍 Impacto Geografico Global")
+        
+        col_map1, col_map2 = st.columns([1, 3])
+        
+        with col_map1:
+            var_map = st.selectbox(
+                "Variable para Mapa:",
+                ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
+                key='map_var'
+            )
+            
+            st.info(f"**Visualizando:** {var_map}\n\n"
+                   f"**Max:** {df_viz[var_map].max():.2f}\n"
+                   f"**Min:** {df_viz[var_map].min():.2f}\n"
+                   f"**Media:** {df_viz[var_map].mean():.2f}")
+        
+        with col_map2:
+            fig_map = px.choropleth(
+                df_viz,
+                locations='ISO3',
+                color=var_map,
+                hover_name='country',
+                hover_data={
+                    'ISO3': False,
+                    var_map: ':.2f',
+                    'continent': True
+                },
+                color_continuous_scale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
                 template="plotly_dark"
             )
-            fig_scat.update_layout(
+            fig_map.update_layout(
+                paper_bgcolor='#0B0F19',
+                geo=dict(
+                    bgcolor='#0B0F19',
+                    showframe=False,
+                    showcoastlines=True,
+                    coastlinecolor='#334155',
+                    landcolor='#1F2937',
+                    lakecolor='#111827',
+                    oceancolor='#0B0F19',
+                    showocean=True,
+                    projection_type='natural earth'
+                ),
+                font=dict(family="Inter", size=11, color='#94A3B8'),
+                margin=dict(t=0, b=0, l=0, r=0),
+                height=450,
+                coloraxis_colorbar=dict(
+                    tickfont=dict(color='#94A3B8'),
+                    title=dict(font=dict(color='#94A3B8', size=10))
+                )
+            )
+            st.plotly_chart(fig_map, use_container_width=True)
+        
+        st.markdown("---")
+        
+        # --- SECCIÓN 6: COMPARACIÓN DIRECTA ENTRE PAÍSES ---
+        st.markdown("### ⚖️ Comparacion Detallada entre Paises")
+        
+        paises_comparar = st.multiselect(
+            "Selecciona 2-4 paises para comparar:",
+            options=sorted(df_viz['country'].unique()),
+            default=sorted(df_viz['country'].unique())[:3] if len(df_viz['country'].unique()) >= 3 else sorted(df_viz['country'].unique()),
+            max_selections=4,
+            key='compare_countries'
+        )
+        
+        if len(paises_comparar) >= 2:
+            df_compare = df_viz[df_viz['country'].isin(paises_comparar)]
+            df_compare_agg = df_compare.groupby('country')[['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']].mean().reset_index()
+            
+            # Crear gráfico de barras agrupadas
+            fig_compare = go.Figure()
+            
+            variables = ['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']
+            colors = ['#22D3EE', '#818CF8', '#34D399', '#F472B6']
+            
+            for i, var in enumerate(variables):
+                fig_compare.add_trace(go.Bar(
+                    name=var,
+                    x=df_compare_agg['country'],
+                    y=df_compare_agg[var],
+                    marker_color=colors[i]
+                ))
+            
+            fig_compare.update_layout(
+                barmode='group',
+                title="Comparacion de Metricas entre Paises",
                 plot_bgcolor='#111827',
                 paper_bgcolor='#0B0F19',
                 font=dict(family="Inter", size=12, color='#94A3B8'),
-                margin=dict(t=30, b=30),
-                xaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
-                yaxis=dict(gridcolor='#1E293B', zerolinecolor='#1E293B'),
+                margin=dict(t=40, b=20),
+                xaxis=dict(gridcolor='#1E293B', title=""),
+                yaxis=dict(gridcolor='#1E293B', title="Valor"),
+                height=400,
                 legend=dict(
                     orientation="h",
                     yanchor="bottom",
-                    y=-0.25,
+                    y=1.02,
                     xanchor="center",
                     x=0.5,
-                    font=dict(color='#94A3B8'),
-                    bgcolor='rgba(0,0,0,0)'
+                    font=dict(color='#94A3B8')
                 )
             )
-            st.plotly_chart(fig_scat, use_container_width=True)
-
-        st.markdown("**Impacto Geografico Global**")
-        fig_map = px.choropleth(
-            df_viz, locations="ISO3", color="casos_100k", 
-            hover_name="country", color_continuous_scale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
-            template="plotly_dark"
-        )
-        fig_map.update_layout(
-            paper_bgcolor='#0B0F19',
-            geo=dict(
-                bgcolor='#0B0F19',
-                showframe=False,
-                showcoastlines=True,
-                coastlinecolor='#334155',
-                landcolor='#1F2937',
-                lakecolor='#111827',
-                oceancolor='#0B0F19',
-                showocean=True,
-            ),
-            font=dict(family="Inter", size=12, color='#94A3B8'),
-            margin=dict(t=20, b=20, l=0, r=0),
-            height=500,
-            coloraxis_colorbar=dict(
-                tickfont=dict(color='#94A3B8'),
-                title=dict(font=dict(color='#94A3B8'))
-            )
-        )
-        st.plotly_chart(fig_map, use_container_width=True)
+            st.plotly_chart(fig_compare, use_container_width=True)
+            
+            # Tabla comparativa
+            st.markdown("**📋 Tabla Comparativa**")
+            df_compare_display = df_compare_agg.set_index('country')
+            df_compare_display.columns = ['Casos/100k', 'Letalidad %', 'Camas/100k', 'Temp °C']
+            st.dataframe(df_compare_display.round(2).style.background_gradient(cmap='viridis'), use_container_width=True)
+        else:
+            st.info("Selecciona al menos 2 paises para ver la comparacion")
 
     # --- TAB 4: CHAT INTERACTIVO CON IA ---
     with tab_ia:
@@ -840,7 +1120,7 @@ INSTRUCCIONES DE RESPUESTA:
                         full_response = ""
                         
                         stream = client.chat.completions.create(
-                            model="llama-3.3-70b-versatile",  # ← MODELO ACTUALIZADO
+                            model="llama-3.3-70b-versatile",
                             messages=messages_for_api,
                             temperature=0.7,
                             max_tokens=2048,
@@ -868,7 +1148,7 @@ INSTRUCCIONES DE RESPUESTA:
                         message_placeholder.error(error_msg)
         
         # Sección de preguntas sugeridas (minimalista)
-        if len(st.session_state.messages) == 0:  # Solo mostrar si no hay conversación
+        if len(st.session_state.messages) == 0:
             with st.expander("💡 Preguntas sugeridas", expanded=False):
                 suggestions = [
                     ("📊", "Correlacion temperatura vs casos"),
