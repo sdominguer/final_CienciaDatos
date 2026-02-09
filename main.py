@@ -913,39 +913,95 @@ if uploaded_file is not None:
         # MAPA AVANZADO CON GEOPANDAS
         # =============================
         
+        # =============================
+        # MAPA PREMIUM 🌍
+        # =============================
+        
         try:
             world = gpd.read_file("countries.geojson")
         
-            # NORMALIZAR ISO
             df_viz["ISO3"] = df_viz["ISO3"].str.upper().str.strip()
         
-            # AGRUPAR
             df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
         
-            # 👉 CAMBIA AQUÍ EL NOMBRE SI ES DISTINTO
-            geo_key = "ISO3166-1-Alpha-3"   # <- AJUSTAR SEGÚN st.write(world.columns)
+            gdf = world.merge(
+                df_map,
+                left_on="ISO3166-1-Alpha-3",
+                right_on="ISO3",
+                how="left"
+            )
         
-            gdf = world.merge(df_map, left_on=geo_key, right_on="ISO3", how="left")
+            # -------------------------
+            # CREAR MAPA BASE
+            # -------------------------
+            m = folium.Map(
+                location=[20, 0],
+                zoom_start=2,
+                tiles="cartodb positron"  # más corporativo
+            )
         
-            st.write("Cantidad de matches:", gdf[var_map].notna().sum())
-        
-            m = folium.Map(location=[20, 0], zoom_start=2, tiles="cartodb dark_matter")
-        
-            folium.Choropleth(
+            # -------------------------
+            # COROPLETA
+            # -------------------------
+            choropleth = folium.Choropleth(
                 geo_data=gdf.to_json(),
                 data=gdf,
                 columns=["ISO3", var_map],
-                key_on=f"feature.properties.{geo_key}",
+                key_on="feature.properties.ISO3166-1-Alpha-3",
                 fill_color="YlGnBu",
-                fill_opacity=0.7,
-                line_opacity=0.2,
-                legend_name=var_map
+                fill_opacity=0.75,
+                line_opacity=0.3,
+                legend_name=f"{var_map} (promedio)",
+                nan_fill_color="#d3d3d3",  # gris elegante para sin datos
             ).add_to(m)
         
-            st_folium(m, use_container_width=True, height=500)
+            # -------------------------
+            # HOVER PRO
+            # -------------------------
+            style_function = lambda x: {
+                "fillColor": "#d3d3d3" if x["properties"][var_map] is None else None,
+                "color": "#2b2b2b",
+                "weight": 0.5,
+                "fillOpacity": 0.75,
+            }
+        
+            highlight_function = lambda x: {
+                "weight": 2,
+                "color": "black",
+                "fillOpacity": 0.9,
+            }
+        
+            tooltip = folium.GeoJsonTooltip(
+                fields=["name", var_map],
+                aliases=["País:", "Valor:"],
+                localize=True,
+                sticky=False,
+                labels=True,
+                style="""
+                    background-color: white;
+                    border: 1px solid black;
+                    border-radius: 3px;
+                    box-shadow: 3px;
+                """,
+            )
+        
+            folium.GeoJson(
+                gdf,
+                style_function=style_function,
+                highlight_function=highlight_function,
+                tooltip=tooltip,
+            ).add_to(m)
+        
+            # -------------------------
+            # CONTROL DE CAPAS
+            # -------------------------
+            folium.LayerControl().add_to(m)
+        
+            # Mostrar
+            st_folium(m, use_container_width=True, height=520)
         
         except Exception as e:
-            st.error(f"Error en el join geográfico: {e}")
+            st.error(f"Error en el mapa: {e}")
 
 
 
