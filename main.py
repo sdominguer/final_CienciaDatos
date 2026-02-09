@@ -928,7 +928,7 @@ if uploaded_file is not None:
         # =============================
         # MAPA INTERACTIVO + CLICK + HOVER + TIME
         # =============================
-        
+        if pais_click is not None:
         try:
             world = gpd.read_file("countries.geojson")
         
