@@ -916,44 +916,30 @@ if uploaded_file is not None:
         try:
             world = gpd.read_file("countries.geojson")
         
-            # Agrupar valores del indicador por país
+            # NORMALIZAR ISO
+            df_viz["ISO3"] = df_viz["ISO3"].str.upper().str.strip()
+        
+            # AGRUPAR
             df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
         
-            # JOIN
-            gdf = world.merge(df_map, left_on="ISO_A3", right_on="ISO3", how="left")
-            st.write(gdf[[ "ISO3", var_map ]].head())
+            # 👉 CAMBIA AQUÍ EL NOMBRE SI ES DISTINTO
+            geo_key = "ISO_A3"   # <- AJUSTAR SEGÚN st.write(world.columns)
         
-            # Crear mapa
-            m = folium.Map(
-                location=[20, 0],
-                zoom_start=2,
-                tiles="cartodb dark_matter"
-            )
+            gdf = world.merge(df_map, left_on=geo_key, right_on="ISO3", how="left")
         
-            # Coropleta
+            st.write("Cantidad de matches:", gdf[var_map].notna().sum())
+        
+            m = folium.Map(location=[20, 0], zoom_start=2, tiles="cartodb dark_matter")
+        
             folium.Choropleth(
                 geo_data=gdf.to_json(),
                 data=gdf,
                 columns=["ISO3", var_map],
-                key_on="feature.properties.ISO_A3",
+                key_on=f"feature.properties.{geo_key}",
                 fill_color="YlGnBu",
                 fill_opacity=0.7,
                 line_opacity=0.2,
                 legend_name=var_map
-            ).add_to(m)
-        
-            # Tooltip
-            folium.GeoJsonTooltip(
-                fields=["ADMIN", var_map],
-                aliases=["País:", "Valor:"],
-            )
-        
-            folium.GeoJson(
-                gdf,
-                tooltip=folium.GeoJsonTooltip(
-                    fields=["ADMIN", var_map],
-                    aliases=["País:", "Valor:"]
-                )
             ).add_to(m)
         
             st_folium(m, use_container_width=True, height=500)
