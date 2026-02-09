@@ -922,8 +922,8 @@ if uploaded_file is not None:
         df_fecha = df_viz[df_viz["date"] == fecha_sel]
         df_map = df_fecha.groupby(["ISO3", "country"]).agg({
             var_map: "mean",
-            "cases": "sum",
-            "deaths": "sum"
+            "casos_100k": "sum",
+            "letalidad_pct": "sum"
         }).reset_index()
         # =============================
         # MAPA INTERACTIVO + CLICK + HOVER + TIME
