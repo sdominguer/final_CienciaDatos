@@ -6,3 +6,9 @@ seaborn
 matplotlib
 groq
 statsmodels
+geopandas
+folium
+streamlit-folium
+shapely
+pyproj
+fiona
