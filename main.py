@@ -921,6 +921,7 @@ if uploaded_file is not None:
         
             # JOIN
             gdf = world.merge(df_map, left_on="ISO_A3", right_on="ISO3", how="left")
+            st.write(gdf[[ "ISO3", var_map ]].head())
         
             # Crear mapa
             m = folium.Map(
