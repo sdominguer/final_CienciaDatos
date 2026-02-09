@@ -923,7 +923,7 @@ if uploaded_file is not None:
             df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
         
             # 👉 CAMBIA AQUÍ EL NOMBRE SI ES DISTINTO
-            geo_key = "ISO_A3"   # <- AJUSTAR SEGÚN st.write(world.columns)
+            geo_key = "ISO3166-1-Alpha-3"   # <- AJUSTAR SEGÚN st.write(world.columns)
         
             gdf = world.merge(df_map, left_on=geo_key, right_on="ISO3", how="left")
         
