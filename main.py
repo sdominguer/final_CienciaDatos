@@ -7,6 +7,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from groq import Groq
 from datetime import datetime
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
@@ -851,6 +854,7 @@ if uploaded_file is not None:
         st.markdown("### 🌍 Impacto Geografico Global")
         
         col_map1, col_map2 = st.columns([1, 3])
+
         
         with col_map1:
             var_map = st.selectbox(
@@ -902,6 +906,67 @@ if uploaded_file is not None:
             st.plotly_chart(fig_map, use_container_width=True)
         
         st.markdown("---")
+
+        st.markdown("### 🗺️ Mapa GIS Avanzado (GeoPandas + Folium)")
+
+        # =============================
+        # MAPA AVANZADO CON GEOPANDAS
+        # =============================
+        
+        try:
+            # Cargar geometría mundial (debes tener este archivo en el repo)
+            world = gpd.read_file("data/world.geojson")  # cambiar ruta si es necesario
+        
+            # Agrupar datos por país (media)
+            df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
+        
+            # Unir con geometría
+            gdf = world.merge(df_map, left_on="ISO_A3", right_on="ISO3", how="left")
+        
+            # Crear mapa base
+            m = folium.Map(
+                location=[20, 0],
+                zoom_start=2,
+                tiles="cartodb dark_matter"
+            )
+        
+            # Añadir capa coroplética
+            folium.Choropleth(
+                geo_data=gdf.to_json(),
+                data=gdf,
+                columns=["ISO3", var_map],
+                key_on="feature.properties.ISO_A3",
+                fill_color="YlGnBu",
+                fill_opacity=0.7,
+                line_opacity=0.2,
+                legend_name=var_map
+            ).add_to(m)
+        
+            # Tooltip con info
+            tooltip = folium.features.GeoJsonTooltip(
+                fields=["ADMIN", var_map],
+                aliases=["País:", "Valor:"],
+                localize=True
+            )
+        
+            folium.GeoJson(
+                gdf,
+                tooltip=tooltip,
+                style_function=lambda x: {
+                    "color": "#334155",
+                    "weight": 0.5,
+                    "fillOpacity": 0
+                }
+            ).add_to(m)
+        
+            # Mostrar en Streamlit
+            st_folium(m, use_container_width=True, height=500)
+        
+        except Exception as e:
+            st.warning(f"No se pudo cargar el mapa GIS: {e}")
+
+
+
         
         # --- SECCIÓN 6: COMPARACIÓN DIRECTA ENTRE PAÍSES ---
         st.markdown("### ⚖️ Comparacion Detallada entre Paises")
