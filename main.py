@@ -914,23 +914,22 @@ if uploaded_file is not None:
         # =============================
         
         try:
-            # Cargar geometría mundial (debes tener este archivo en el repo)
-            world = gpd.read_file("countries.geojson")  # cambiar ruta si es necesario
+            world = gpd.read_file("countries.geojson")
         
-            # Agrupar datos por país (media)
+            # Agrupar valores del indicador por país
             df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
         
-            # Unir con geometría
+            # JOIN
             gdf = world.merge(df_map, left_on="ISO_A3", right_on="ISO3", how="left")
         
-            # Crear mapa base
+            # Crear mapa
             m = folium.Map(
                 location=[20, 0],
                 zoom_start=2,
                 tiles="cartodb dark_matter"
             )
         
-            # Añadir capa coroplética
+            # Coropleta
             folium.Choropleth(
                 geo_data=gdf.to_json(),
                 data=gdf,
@@ -942,28 +941,24 @@ if uploaded_file is not None:
                 legend_name=var_map
             ).add_to(m)
         
-            # Tooltip con info
-            tooltip = folium.features.GeoJsonTooltip(
+            # Tooltip
+            folium.GeoJsonTooltip(
                 fields=["ADMIN", var_map],
                 aliases=["País:", "Valor:"],
-                localize=True
             )
         
             folium.GeoJson(
                 gdf,
-                tooltip=tooltip,
-                style_function=lambda x: {
-                    "color": "#334155",
-                    "weight": 0.5,
-                    "fillOpacity": 0
-                }
+                tooltip=folium.GeoJsonTooltip(
+                    fields=["ADMIN", var_map],
+                    aliases=["País:", "Valor:"]
+                )
             ).add_to(m)
         
-            # Mostrar en Streamlit
             st_folium(m, use_container_width=True, height=500)
         
         except Exception as e:
-            st.warning(f"No se pudo cargar el mapa GIS: {e}")
+            st.error(f"Error en el join geográfico: {e}")
 
 
 
