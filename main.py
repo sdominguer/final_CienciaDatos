@@ -914,15 +914,25 @@ if uploaded_file is not None:
         # =============================
         
         # =============================
-        # MAPA PREMIUM 🌍
+        # TIME SLIDER
+        # =============================
+        
+        fechas = sorted(df_viz["date"].unique())
+        fecha_sel = st.select_slider("Fecha del mapa", options=fechas)
+        df_fecha = df_viz[df_viz["date"] == fecha_sel]
+        df_map = df_fecha.groupby(["ISO3", "country"]).agg({
+            var_map: "mean",
+            "cases": "sum",
+            "deaths": "sum"
+        }).reset_index()
+        # =============================
+        # MAPA INTERACTIVO + CLICK + HOVER + TIME
         # =============================
         
         try:
             world = gpd.read_file("countries.geojson")
         
-            df_viz["ISO3"] = df_viz["ISO3"].str.upper().str.strip()
-        
-            df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
+            df_fecha["ISO3"] = df_fecha["ISO3"].str.upper().str.strip()
         
             gdf = world.merge(
                 df_map,
@@ -931,77 +941,61 @@ if uploaded_file is not None:
                 how="left"
             )
         
-            # -------------------------
-            # CREAR MAPA BASE
-            # -------------------------
             m = folium.Map(
                 location=[20, 0],
                 zoom_start=2,
-                tiles="cartodb positron"  # más corporativo
+                tiles="cartodb positron"
             )
         
-            # -------------------------
-            # COROPLETA
-            # -------------------------
-            choropleth = folium.Choropleth(
+            folium.Choropleth(
                 geo_data=gdf.to_json(),
                 data=gdf,
                 columns=["ISO3", var_map],
                 key_on="feature.properties.ISO3166-1-Alpha-3",
                 fill_color="YlGnBu",
-                fill_opacity=0.75,
+                fill_opacity=0.8,
                 line_opacity=0.3,
-                legend_name=f"{var_map} (promedio)",
-                nan_fill_color="#d3d3d3",  # gris elegante para sin datos
+                nan_fill_color="#d3d3d3",
+                legend_name=f"{var_map} - {fecha_sel}"
             ).add_to(m)
         
-            # -------------------------
-            # HOVER PRO
-            # -------------------------
-            style_function = lambda x: {
-                "fillColor": "#d3d3d3" if x["properties"][var_map] is None else None,
-                "color": "#2b2b2b",
-                "weight": 0.5,
-                "fillOpacity": 0.75,
-            }
-        
-            highlight_function = lambda x: {
-                "weight": 2,
-                "color": "black",
-                "fillOpacity": 0.9,
-            }
-        
             tooltip = folium.GeoJsonTooltip(
-                fields=["name", var_map],
-                aliases=["País:", "Valor:"],
+                fields=["name", var_map, "cases", "deaths"],
+                aliases=["País:", "Indicador:", "Casos:", "Muertes:"],
                 localize=True,
-                sticky=False,
                 labels=True,
-                style="""
-                    background-color: white;
-                    border: 1px solid black;
-                    border-radius: 3px;
-                    box-shadow: 3px;
-                """,
             )
         
             folium.GeoJson(
                 gdf,
-                style_function=style_function,
-                highlight_function=highlight_function,
                 tooltip=tooltip,
+                highlight_function=lambda x: {
+                    "weight": 2,
+                    "color": "black",
+                    "fillOpacity": 0.9,
+                },
             ).add_to(m)
         
-            # -------------------------
-            # CONTROL DE CAPAS
-            # -------------------------
-            folium.LayerControl().add_to(m)
+            # 👇 CAPTURAR CLICK
+            map_data = st_folium(m, use_container_width=True, height=520)
         
-            # Mostrar
-            st_folium(m, use_container_width=True, height=520)
+            # Guardar selección
+            pais_click = None
+            if map_data["last_active_drawing"]:
+                props = map_data["last_active_drawing"]["properties"]
+                pais_click = props.get("ISO3166-1-Alpha-3")
         
         except Exception as e:
             st.error(f"Error en el mapa: {e}")
+        # =============================
+        # FILTRO POR PAÍS
+        # =============================
+        
+        if pais_click:
+            st.success(f"País seleccionado: {pais_click}")
+            df_filtrado = df_viz[df_viz["ISO3"] == pais_click]
+        else:
+            df_filtrado = df_viz
 
 
 
