@@ -915,7 +915,7 @@ if uploaded_file is not None:
         
         try:
             # Cargar geometría mundial (debes tener este archivo en el repo)
-            world = gpd.read_file("data/world.geojson")  # cambiar ruta si es necesario
+            world = gpd.read_file("countries.geojson")  # cambiar ruta si es necesario
         
             # Agrupar datos por país (media)
             df_map = df_viz.groupby(["ISO3", "country"])[var_map].mean().reset_index()
