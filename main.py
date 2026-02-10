@@ -1080,6 +1080,64 @@ if uploaded_file is not None:
             df_filtrado = df_viz
 
 
+        st.markdown("### ⚖️ mapa burbujas")
+
+                # ==========================================
+        # MAPA DE BURBUJAS (NUEVA VISUALIZACIÓN)
+        # ==========================================
+        
+        st.subheader("🌍 Distribución por magnitud (Bubble Map)")
+        
+        try:
+            world = load_world()  # tu geojson cacheado
+        
+            # normalizar ISO
+            df_map["ISO3"] = df_map["ISO3"].str.upper().str.strip()
+        
+            gdf_bubble = world.merge(
+                df_map,
+                left_on="ISO3166-1-Alpha-3",
+                right_on="ISO3",
+                how="left"
+            )
+        
+            m2 = folium.Map(
+                location=[20, 0],
+                zoom_start=2,
+                tiles="cartodb dark_matter"
+            )
+        
+            # evitar división por cero
+            max_value = gdf_bubble[var_map2].max()
+            if pd.isna(max_value) or max_value == 0:
+                max_value = 1
+        
+            for _, r in gdf_bubble.iterrows():
+                if pd.notnull(r[var_map2]):
+        
+                    # 🎯 escala del tamaño
+                    radius = (r[var_map2] / max_value) * 40
+        
+                    folium.CircleMarker(
+                        location=[r.geometry.centroid.y, r.geometry.centroid.x],
+                        radius=radius,
+                        fill=True,
+                        fill_opacity=0.8,
+                        weight=1,
+                        popup=f"""
+                        <b>{r['name']}</b><br>
+                        {var_map2}: {r[var_map2]:.2f}<br>
+                        Casos: {r['casos_100k']:.2f}<br>
+                        Letalidad: {r['letalidad_pct']:.2f}
+                        """,
+                    ).add_to(m2)
+        
+            st_folium(m2, use_container_width=True, height=500)
+        
+        except Exception as e:
+            st.error(f"Error en bubble map: {e}")
+
+
         
         # --- SECCIÓN 6: COMPARACIÓN DIRECTA ENTRE PAÍSES ---
         st.markdown("### ⚖️ Comparacion Detallada entre Paises")
