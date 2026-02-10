@@ -945,7 +945,8 @@ if uploaded_file is not None:
                 .legend {
                     font-size: 18px !important;
                     font-weight: bold !important;
-                    background-color: rgba(255,255,255,0.9);
+                    font-color: white
+                    background-color: rgba(0,0,0,0.6);
                     padding: 10px;
                     border-radius: 6px;
                 }
