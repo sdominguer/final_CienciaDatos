@@ -918,7 +918,7 @@ if uploaded_file is not None:
             var_map2 = st.selectbox(
                 "Variable para Mapa:",
                 ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
-                key='map_var'
+                key2='map_var'
             )
             st.info(f"**Visualizando:** {var_map2}\n\n"
                 f"**Max:** {df_viz[var_map2].max():.2f}\n"
