@@ -933,7 +933,7 @@ if uploaded_file is not None:
                     tooltip=tooltip,
                     highlight_function=lambda x: {
                         "weight": 2,
-                        "color": "black",
+                        "color": "red",
                         "fillOpacity": 0.9,
                     },
                 ).add_to(m)
