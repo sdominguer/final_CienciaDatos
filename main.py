@@ -912,7 +912,7 @@ if uploaded_file is not None:
         else:
             st.info("Selecciona al menos 2 paises para ver la comparacion")
         
-  with tab_geo:
+    with tab_geo:
      
         st.markdown("### 🗺️ Mapa GIS  (GeoPandas + Folium)")
 
