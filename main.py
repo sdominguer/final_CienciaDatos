@@ -938,7 +938,20 @@ if uploaded_file is not None:
                         "fillOpacity": 0.9,
                     },
                 ).add_to(m)
-            
+
+                # CSS para modificar la leyenda
+                legend_css = """
+                <style>
+                .legend {
+                    font-size: 16px !important;
+                    font-weight: bold !important;
+                }
+                </style>
+                """
+                m.get_root().html.add_child(folium.Element(legend_css))
+
+
+                
                 # 👇 SIEMPRE renderizamos
                 map_data = st_folium(m, use_container_width=True, height=520)
             
