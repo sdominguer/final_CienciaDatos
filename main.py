@@ -482,6 +482,10 @@ st.sidebar.markdown("### Modulo ETL e Ingesta")
 st.sidebar.markdown("---")
 uploaded_file = st.sidebar.file_uploader("Cargar Base de Datos Final (CSV)", type="csv")
 
+@st.cache_data
+def load_world():
+    return gpd.read_file("countries.geojson")
+
 if uploaded_file is not None:
     # Lectura de datos
     df_raw = pd.read_csv(uploaded_file)
@@ -943,7 +947,8 @@ if uploaded_file is not None:
             pais_click = None  # valor inicial
             
             try:
-                world = gpd.read_file("countries.geojson")
+                #world = gpd.read_file("countries.geojson")
+                world = load_world()
             
                 df_fecha["ISO3"] = df_fecha["ISO3"].str.upper().str.strip()
             
@@ -957,7 +962,7 @@ if uploaded_file is not None:
                 m = folium.Map(
                     location=[20, 0],
                     zoom_start=2,
-                    tiles="cartodb positron"
+                    tiles="cartodb dark_matter"
                 )
             
                 folium.Choropleth(
