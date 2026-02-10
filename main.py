@@ -1078,6 +1078,8 @@ if uploaded_file is not None:
             df_filtrado = df_viz[df_viz["ISO3"] == pais_click]
         else:
             df_filtrado = df_viz
+            
+        st.markdown("---")
 
 
         st.markdown("### ⚖️ mapa burbujas")
@@ -1136,6 +1138,8 @@ if uploaded_file is not None:
         
         except Exception as e:
             st.error(f"Error en bubble map: {e}")
+
+        st.markdown("---")
 
 
         
