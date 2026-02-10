@@ -943,8 +943,11 @@ if uploaded_file is not None:
                 legend_css = """
                 <style>
                 .legend {
-                    font-size: 16px !important;
+                    font-size: 18px !important;
                     font-weight: bold !important;
+                    background-color: white;
+                    padding: 10px;
+                    border-radius: 6px;
                 }
                 </style>
                 """
