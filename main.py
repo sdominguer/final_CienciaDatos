@@ -903,24 +903,112 @@ if uploaded_file is not None:
                     how="left"
                 )
             
-                m = folium.Map(
-                    location=[20, 0],
-                    zoom_start=2,
-                    tiles="cartodb dark_matter"
-                )
+            # ==========================================
+            # ZOOM DINÁMICO INTELIGENTE
+            # ==========================================
             
-                folium.Choropleth(
-                    geo_data=gdf.to_json(),
-                    data=gdf,
-                    columns=["ISO3", var_map2],
-                    key_on="feature.properties.ISO3166-1-Alpha-3",
-                    fill_color="plasma",          # 🔥 NUEVO
-                    fill_opacity=0.9,             # más intensidad
-                    line_opacity=0.15,            # bordes más finos
-                    nan_fill_color="#3a3a3a",     # mejor para dark
-                    legend_name=f"{var_map2} - {fecha_sel}",
-                    bins=7
-                ).add_to(m)
+            zoom_actual = st.session_state.get("map_zoom", 2)
+            
+            # bins según nivel de exploración
+            if zoom_actual <= 3:
+                bins_dynamic = 5
+                borde = 0.1
+            elif zoom_actual <= 5:
+                bins_dynamic = 7
+                borde = 0.2
+            elif zoom_actual <= 7:
+                bins_dynamic = 9
+                borde = 0.4
+            else:
+                bins_dynamic = 12
+                borde = 0.8
+            
+            
+            m = folium.Map(
+                location=[20, 0],
+                zoom_start=zoom_actual,
+                tiles="cartodb dark_matter"
+            )
+            
+            # ==========================================
+            # CAPA COLOR
+            # ==========================================
+            
+            folium.Choropleth(
+                geo_data=gdf.to_json(),
+                data=gdf,
+                columns=["ISO3", var_map2],
+                key_on="feature.properties.ISO3166-1-Alpha-3",
+                fill_color="plasma",
+                fill_opacity=0.95,
+                line_opacity=borde,
+                nan_fill_color="#3a3a3a",
+                legend_name=f"{var_map2} - {fecha_sel}",
+                bins=bins_dynamic
+            ).add_to(m)
+            
+            
+            # ==========================================
+            # TOOLTIP
+            # ==========================================
+            
+            tooltip = folium.GeoJsonTooltip(
+                fields=["name", var_map2, "casos_100k", "letalidad_pct"],
+                aliases=["País:", "Indicador:", "Casos:", "Letalidad:"],
+                localize=True,
+                labels=True,
+            )
+            
+            folium.GeoJson(
+                gdf,
+                tooltip=tooltip,
+                highlight_function=lambda x: {
+                    "weight": 2.5,
+                    "color": "cyan",
+                    "fillOpacity": 1,
+                },
+            ).add_to(m)
+            
+            
+            # ==========================================
+            # ETIQUETAS AL MAX ZOOM (🔥 NIVEL PRO)
+            # ==========================================
+            
+            if zoom_actual >= 7:
+                for _, r in gdf.iterrows():
+                    if pd.notnull(r[var_map2]):
+                        folium.Marker(
+                            location=[r.geometry.centroid.y, r.geometry.centroid.x],
+                            icon=folium.DivIcon(
+                                html=f"""
+                                <div style="
+                                    font-size:10px;
+                                    color:white;
+                                    text-align:center;">
+                                    {r['ISO3']}
+                                </div>
+                                """
+                            )
+                        ).add_to(m)
+            
+            
+            # ==========================================
+            # CSS LEYENDA DARK PRO
+            # ==========================================
+            
+            legend_css = """
+            <style>
+            .legend {
+                font-size: 18px !important;
+                font-weight: bold !important;
+                color: white !important;
+                background-color: rgba(0,0,0,0.7);
+                padding: 10px;
+                border-radius: 6px;
+            }
+            </style>
+            """
+            m.get_root().html.add_child(folium.Element(legend_css))
             
                 tooltip = folium.GeoJsonTooltip(
                     fields=["name", var_map2, "casos_100k", "letalidad_pct"],
@@ -957,7 +1045,20 @@ if uploaded_file is not None:
 
                 
                 # 👇 SIEMPRE renderizamos
+                # ==========================================
+                # RENDER 
+                # ==========================================
+                
                 map_data = st_folium(m, use_container_width=True, height=520)
+                
+                # guardar zoom
+                if map_data and map_data.get("zoom"):
+                    st.session_state.map_zoom = map_data["zoom"]
+                
+                # capturar click
+                if map_data and map_data.get("last_active_drawing"):
+                    props = map_data["last_active_drawing"]["properties"]
+                    pais_click = props.get("ISO3166-1-Alpha-3")
             
                 # 👇 luego vemos si hubo click
                 if map_data and map_data.get("last_active_drawing"):
