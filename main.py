@@ -912,6 +912,20 @@ if uploaded_file is not None:
         # =============================
         # MAPA INTERACTIVO + CLICK + HOVER + TIME
         # =============================
+
+                # TIME SLIDER
+        fechas = sorted(df_viz["date"].unique())
+        fecha_sel = st.select_slider("Fecha del mapa", options=fechas)
+        
+        # DATA DE LA FECHA
+        df_fecha = df_viz[df_viz["date"] == fecha_sel]
+        
+        # AGRUPACIÓN PARA MAPA
+        df_map = df_fecha.groupby(["ISO3", "country"]).agg({
+            var_map: "mean",
+            "casos_100k": "sum",
+            "letalidad_pct": "sum"
+        }).reset_index()
         
         pais_click = None  # valor inicial
         
