@@ -526,11 +526,10 @@ if uploaded_file is not None:
     df_final = df_clean[(df_clean['indicator'] == indicador) & (df_clean['continent'].isin(continentes))]
 
     # --- ESTRUCTURA DE PESTAÑAS (Requisito 2.2) ---
-    tab_desc, tab_cuant, tab_graf, tab_geo, tab_ia = st.tabs([
+    tab_desc, tab_cuant, tab_graf, tab_ia = st.tabs([
         "  📋 Analisis Descriptivo  ", 
         "  📊 Analisis Cuantitativo  ", 
         "  📈 Visualizaciones Dinamicas  ", 
-        "  🌎 Geo Tab ",
         "  🤖 AI Analyst  "
     ])
 
@@ -854,66 +853,8 @@ if uploaded_file is not None:
             st.plotly_chart(fig_heatmap, use_container_width=True)
         
         st.markdown("---")
-        # --- SECCIÓN 6: COMPARACIÓN DIRECTA ENTRE PAÍSES ---
-        st.markdown("### ⚖️ Comparacion Detallada entre Paises")
         
-        paises_comparar = st.multiselect(
-            "Selecciona 2-4 paises para comparar:",
-            options=sorted(df_viz['country'].unique()),
-            default=sorted(df_viz['country'].unique())[:3] if len(df_viz['country'].unique()) >= 3 else sorted(df_viz['country'].unique()),
-            max_selections=4,
-            key='compare_countries'
-        )
-        
-        if len(paises_comparar) >= 2:
-            df_compare = df_viz[df_viz['country'].isin(paises_comparar)]
-            df_compare_agg = df_compare.groupby('country')[['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']].mean().reset_index()
-            
-            # Crear gráfico de barras agrupadas
-            fig_compare = go.Figure()
-            
-            variables = ['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']
-            colors = ['#22D3EE', '#818CF8', '#34D399', '#F472B6']
-            
-            for i, var in enumerate(variables):
-                fig_compare.add_trace(go.Bar(
-                    name=var,
-                    x=df_compare_agg['country'],
-                    y=df_compare_agg[var],
-                    marker_color=colors[i]
-                ))
-            
-            fig_compare.update_layout(
-                barmode='group',
-                title="Comparacion de Metricas entre Paises",
-                plot_bgcolor='#111827',
-                paper_bgcolor='#0B0F19',
-                font=dict(family="Inter", size=12, color='#94A3B8'),
-                margin=dict(t=40, b=20),
-                xaxis=dict(gridcolor='#1E293B', title=""),
-                yaxis=dict(gridcolor='#1E293B', title="Valor"),
-                height=400,
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom",
-                    y=1.02,
-                    xanchor="center",
-                    x=0.5,
-                    font=dict(color='#94A3B8')
-                )
-            )
-            st.plotly_chart(fig_compare, use_container_width=True)
-            
-            # Tabla comparativa
-            st.markdown("**📋 Tabla Comparativa**")
-            df_compare_display = df_compare_agg.set_index('country')
-            df_compare_display.columns = ['Casos/100k', 'Letalidad %', 'Camas/100k', 'Temp °C']
-            st.dataframe(df_compare_display.round(2).style.background_gradient(cmap='viridis'), use_container_width=True)
-        else:
-            st.info("Selecciona al menos 2 paises para ver la comparacion")
-        
-    with tab_geo:
-     
+
         st.markdown("### 🗺️ Mapa GIS  (GeoPandas + Folium)")
 
         # =============================
@@ -1139,6 +1080,64 @@ if uploaded_file is not None:
             df_filtrado = df_viz
 
 
+        
+        # --- SECCIÓN 6: COMPARACIÓN DIRECTA ENTRE PAÍSES ---
+        st.markdown("### ⚖️ Comparacion Detallada entre Paises")
+        
+        paises_comparar = st.multiselect(
+            "Selecciona 2-4 paises para comparar:",
+            options=sorted(df_viz['country'].unique()),
+            default=sorted(df_viz['country'].unique())[:3] if len(df_viz['country'].unique()) >= 3 else sorted(df_viz['country'].unique()),
+            max_selections=4,
+            key='compare_countries'
+        )
+        
+        if len(paises_comparar) >= 2:
+            df_compare = df_viz[df_viz['country'].isin(paises_comparar)]
+            df_compare_agg = df_compare.groupby('country')[['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']].mean().reset_index()
+            
+            # Crear gráfico de barras agrupadas
+            fig_compare = go.Figure()
+            
+            variables = ['casos_100k', 'letalidad_pct', 'camas_por_100k', 'avg_temp']
+            colors = ['#22D3EE', '#818CF8', '#34D399', '#F472B6']
+            
+            for i, var in enumerate(variables):
+                fig_compare.add_trace(go.Bar(
+                    name=var,
+                    x=df_compare_agg['country'],
+                    y=df_compare_agg[var],
+                    marker_color=colors[i]
+                ))
+            
+            fig_compare.update_layout(
+                barmode='group',
+                title="Comparacion de Metricas entre Paises",
+                plot_bgcolor='#111827',
+                paper_bgcolor='#0B0F19',
+                font=dict(family="Inter", size=12, color='#94A3B8'),
+                margin=dict(t=40, b=20),
+                xaxis=dict(gridcolor='#1E293B', title=""),
+                yaxis=dict(gridcolor='#1E293B', title="Valor"),
+                height=400,
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="center",
+                    x=0.5,
+                    font=dict(color='#94A3B8')
+                )
+            )
+            st.plotly_chart(fig_compare, use_container_width=True)
+            
+            # Tabla comparativa
+            st.markdown("**📋 Tabla Comparativa**")
+            df_compare_display = df_compare_agg.set_index('country')
+            df_compare_display.columns = ['Casos/100k', 'Letalidad %', 'Camas/100k', 'Temp °C']
+            st.dataframe(df_compare_display.round(2).style.background_gradient(cmap='viridis'), use_container_width=True)
+        else:
+            st.info("Selecciona al menos 2 paises para ver la comparacion")
 
     # --- TAB 4: CHAT INTERACTIVO CON IA ---
     with tab_ia:
