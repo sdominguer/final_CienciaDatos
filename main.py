@@ -854,64 +854,8 @@ if uploaded_file is not None:
         
         st.markdown("---")
         
-        # --- SECCIÓN 5: MAPA GEOGRÁFICO ---
-        st.markdown("### 🌍 Impacto Geografico Global")
-        
-        col_map1, col_map2 = st.columns([1, 3])
 
-        
-        with col_map1:
-            var_map = st.selectbox(
-                "Variable para Mapa:",
-                ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
-                key='map_var'
-            )
-            
-            st.info(f"**Visualizando:** {var_map}\n\n"
-                   f"**Max:** {df_viz[var_map].max():.2f}\n"
-                   f"**Min:** {df_viz[var_map].min():.2f}\n"
-                   f"**Media:** {df_viz[var_map].mean():.2f}")
-        
-        with col_map2:
-            fig_map = px.choropleth(
-                df_viz,
-                locations='ISO3',
-                color=var_map,
-                hover_name='country',
-                hover_data={
-                    'ISO3': False,
-                    var_map: ':.2f',
-                    'continent': True
-                },
-                color_continuous_scale=[[0, '#0D3B4F'], [0.5, '#22D3EE'], [1, '#818CF8']],
-                template="plotly_dark"
-            )
-            fig_map.update_layout(
-                paper_bgcolor='#0B0F19',
-                geo=dict(
-                    bgcolor='#0B0F19',
-                    showframe=False,
-                    showcoastlines=True,
-                    coastlinecolor='#334155',
-                    landcolor='#1F2937',
-                    lakecolor='#111827',
-                    oceancolor='#0B0F19',
-                    showocean=True,
-                    projection_type='natural earth'
-                ),
-                font=dict(family="Inter", size=11, color='#94A3B8'),
-                margin=dict(t=0, b=0, l=0, r=0),
-                height=450,
-                coloraxis_colorbar=dict(
-                    tickfont=dict(color='#94A3B8'),
-                    title=dict(font=dict(color='#94A3B8', size=10))
-                )
-            )
-            st.plotly_chart(fig_map, use_container_width=True)
-        
-        st.markdown("---")
-
-        st.markdown("### 🗺️ Mapa GIS Avanzado (GeoPandas + Folium)")
+        st.markdown("### 🗺️ Mapa GIS  (GeoPandas + Folium)")
 
         # =============================
         # MAPA INTERACTIVO + CLICK + HOVER + TIME
