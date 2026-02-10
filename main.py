@@ -915,15 +915,15 @@ if uploaded_file is not None:
 
         col_map1, col_map2 = st.columns([1, 3])
         with col_map1:
-            var_map = st.selectbox(
+            var_map2 = st.selectbox(
                 "Variable para Mapa:",
                 ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
                 key='map_var'
             )
-            st.info(f"**Visualizando:** {var_map}\n\n"
-                f"**Max:** {df_viz[var_map].max():.2f}\n"
-                f"**Min:** {df_viz[var_map].min():.2f}\n"
-                f"**Media:** {df_viz[var_map].mean():.2f}")
+            st.info(f"**Visualizando:** {var_map2}\n\n"
+                f"**Max:** {df_viz[var_map2].max():.2f}\n"
+                f"**Min:** {df_viz[var_map2].min():.2f}\n"
+                f"**Media:** {df_viz[var_map2].mean():.2f}")
         with col_map2:
 
                     # TIME SLIDER
