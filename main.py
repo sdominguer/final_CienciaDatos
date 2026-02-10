@@ -918,7 +918,7 @@ if uploaded_file is not None:
                     fill_opacity=0.9,             # más intensidad
                     line_opacity=0.15,            # bordes más finos
                     nan_fill_color="#3a3a3a",     # mejor para dark
-                    legend_name=f"{var_map2} - {fecha_sel}"
+                    legend_name=f"{var_map2} - {fecha_sel}",
                     bins=7
                 ).add_to(m)
             
