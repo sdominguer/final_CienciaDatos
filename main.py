@@ -918,7 +918,7 @@ if uploaded_file is not None:
             var_map2 = st.selectbox(
                 "Variable para Mapa:",
                 ['casos_100k', 'letalidad_pct', 'camas_por_100k'],
-                key2='map_var'
+                key='map_var2'
             )
             st.info(f"**Visualizando:** {var_map2}\n\n"
                 f"**Max:** {df_viz[var_map2].max():.2f}\n"
@@ -935,7 +935,7 @@ if uploaded_file is not None:
             
             # AGRUPACIÓN PARA MAPA
             df_map = df_fecha.groupby(["ISO3", "country"]).agg({
-                var_map: "mean",
+                var_map2: "mean",
                 "casos_100k": "sum",
                 "letalidad_pct": "sum"
             }).reset_index()
@@ -963,17 +963,17 @@ if uploaded_file is not None:
                 folium.Choropleth(
                     geo_data=gdf.to_json(),
                     data=gdf,
-                    columns=["ISO3", var_map],
+                    columns=["ISO3", var_map2],
                     key_on="feature.properties.ISO3166-1-Alpha-3",
                     fill_color="YlGnBu",
                     fill_opacity=0.8,
                     line_opacity=0.3,
                     nan_fill_color="#d3d3d3",
-                    legend_name=f"{var_map} - {fecha_sel}"
+                    legend_name=f"{var_map2} - {fecha_sel}"
                 ).add_to(m)
             
                 tooltip = folium.GeoJsonTooltip(
-                    fields=["name", var_map, "casos_100k", "letalidad_pct"],
+                    fields=["name", var_map2, "casos_100k", "letalidad_pct"],
                     aliases=["País:", "Indicador:", "Casos:", "Letalidad:"],
                     localize=True,
                     labels=True,
