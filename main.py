@@ -472,7 +472,7 @@ st.markdown("""
 st.markdown("""
 <div class="hero-header">
     <div class="hero-badge">COVID-19 ANALYTICS</div>
-    <h1>Sistema de Soporte a la Decision (DSS)</h1>
+    <h1>Sistema de Soporte a la Decision (DSS simon)</h1>
     <p>Plataforma integral de analisis epidemiologico con inteligencia artificial</p>
 </div>
 """, unsafe_allow_html=True)
